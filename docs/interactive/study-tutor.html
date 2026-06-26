@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>FlightOps Academy — AI Study Tutor</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#f5f5f0;padding:1rem;color:#1a1a1a;max-width:720px;margin:0 auto}
+h1{font-size:15px;font-weight:500;margin-bottom:14px}
+select{font-size:12px;padding:5px 10px;border-radius:8px;border:1px solid #ccc;background:#fff;color:#1a1a1a;flex:1;min-width:140px}
+.tb-btn{font-size:12px;padding:5px 10px;border-radius:8px;border:1px solid #ccc;background:#f0efe8;color:#555;cursor:pointer}
+.tb-btn:hover{background:#e5e4dc;color:#1a1a1a}
+#toolbar{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px;align-items:center}
+#msgs{background:#f8f7f2;border:1px solid #e0dfda;border-radius:12px;padding:12px;margin-bottom:10px;min-height:300px;max-height:440px;overflow-y:auto}
+.msg{margin-bottom:12px;display:flex;gap:10px;align-items:flex-start}
+.msg:last-child{margin-bottom:0}
+.avatar{width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:600;flex-shrink:0;margin-top:1px}
+.av-t{background:#dbeafe;color:#1e3a8a}
+.av-u{background:#fff;border:1px solid #ccc;color:#555}
+.bubble{font-size:13px;line-height:1.65;flex:1}
+.bt{background:#fff;border:1px solid #e0dfda;border-radius:0 10px 10px 10px;padding:10px 14px;color:#1a1a1a}
+.bu{background:#dbeafe;border-radius:10px 0 10px 10px;padding:10px 14px;color:#1e3a8a}
+.ref{display:inline-block;font-size:10px;font-weight:600;padding:2px 7px;border-radius:20px;background:#f0efe8;color:#888;border:1px solid #e0dfda;margin-top:6px}
+.typing{display:flex;gap:4px;align-items:center;padding:4px 0}
+.dot{width:5px;height:5px;border-radius:50%;background:#bbb;animation:tp 1.2s ease-in-out infinite}
+.dot:nth-child(2){animation-delay:.2s}.dot:nth-child(3){animation-delay:.4s}
+@keyframes tp{0%,100%{opacity:.3}50%{opacity:1}}
+#quick-wrap{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px}
+.qb{font-size:12px;padding:5px 10px;border-radius:20px;border:1px solid #ccc;background:#fff;color:#555;cursor:pointer}
+.qb:hover{background:#f0efe8;color:#1a1a1a}
+#input-row{display:flex;gap:8px;align-items:flex-end}
+textarea{flex:1;font-size:13px;padding:9px 12px;border-radius:8px;border:1px solid #ccc;background:#fff;color:#1a1a1a;resize:none;line-height:1.5;max-height:100px;overflow-y:auto;font-family:inherit}
+textarea:focus{outline:none;border-color:#378ADD}
+#btn-send{padding:9px 16px;border-radius:8px;border:1px solid #378ADD;background:#dbeafe;color:#1e40af;font-size:13px;font-weight:600;cursor:pointer;white-space:nowrap;flex-shrink:0}
+#btn-send:hover{background:#378ADD;color:#fff}
+#btn-send:disabled{opacity:.4;cursor:default}
+p.credit{font-size:11px;color:#aaa;text-align:right;margin-top:10px}
+</style>
+</head>
+<body>
+<h1>FlightOps Academy — AI study tutor</h1>
+<div id="toolbar">
+  <select id="topic-select" onchange="setTopic()">
+    <option value="general">General — ask anything</option>
+    <option value="aro">Module 3 — ARO procedures</option>
+    <option value="markings">Module 3 — Aerodrome markings and signs</option>
+    <option value="driving">Module 3 — Airside driving (AVIC0001)</option>
+    <option value="sa">Module 3 — Situational awareness (AVIZ0003)</option>
+    <option value="sms">Module 3 — Safety Management Systems</option>
+    <option value="wso">Module 4 — WSO and works safety</option>
+    <option value="ols">Module 4 — OLS and declared distances (AVIB0004)</option>
+    <option value="radio">Module 5 — Radio communications</option>
+    <option value="emergency">Module 6 — Emergency management</option>
+    <option value="norfolk">Module 7 — Norfolk Island specifics</option>
+    <option value="quiz">Quiz me on this topic</option>
+  </select>
+  <button class="tb-btn" onclick="clearChat()">New session</button>
+</div>
+<div id="msgs" role="log"></div>
+<div id="quick-wrap"></div>
+<div id="input-row">
+  <textarea id="inp" rows="1" placeholder="Ask anything about airport operations at YSNF..." onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();send()}" oninput="this.style.height='auto';this.style.height=Math.min(this.scrollHeight,100)+'px'"></textarea>
+  <button id="btn-send" onclick="send()">Ask</button>
+</div>
+<p class="credit">FlightOps Academy — not for operational use. Powered by Claude AI.</p>
+
+<script>
+const SYSTEM=`You are an expert aviation tutor for FlightOps Academy, specialising in Australian airport operations at Norfolk Island Airport (YSNF). You help candidates studying for Flight Operations Officer, Aerodrome Reporting Officer (ARO), and Works Safety Officer (WSO) roles.
+
+Your knowledge is grounded in:
+- CASR Part 139 (Aerodromes)
+- MOS Part 139 (Manual of Standards)
+- ICAO Annex 14 and Doc 9981 (PANS-Aerodromes)
+- AIP Australia
+- CASA Advisory Circulars (AC 139-01, 06, 07, 08, 14)
+- Aviation Transport Security Act 2004
+- CASR Part 99 (DAMP)
+- Norfolk Island Airport specific procedures
+
+Norfolk Island Airport key facts:
+- Single runway 11/29, 1951m x 45m, asphalt, code 4C
+- Elevation 371ft (113m) AMSL, PAPI 3.0 degrees both runways
+- UTC offset: NFST UTC+11:30, NFDT UTC+12:30 (does NOT follow Australian Eastern Daylight Time)
+- Sea fog can close the aerodrome in under 5 minutes — primary weather hazard
+- Masked Booby: high strike risk (1.5kg), slow to react
+- Norfolk Island Green Parrot: critically endangered, EPBC Act protected — do NOT use standard dispersal methods
+- Whale migration June-October elevates seabird activity
+- Single runway means aerodrome closes when runway closes
+- Fuel supply by ship — no quick resupply
+- Medevacs are regular given island isolation
+
+Teaching style:
+- Be direct and specific — reference the exact regulation or MOS section
+- Use YSNF examples where possible
+- Keep responses concise — 3-5 sentences unless more detail is needed
+- When asked to quiz, ask one question at a time and wait for the answer before revealing it
+- Correct errors clearly but constructively
+- Always note when something is safety-critical`;
+
+const TOPIC_CONTEXTS={
+  general:'',
+  aro:'Focus on ARO procedures — runway inspections, lighting, FOD, pavement assessment.',
+  wso:'Focus on WSO procedures — airside works, OLS, NOTAMs, contractor management, risk assessment.',
+  radio:'Focus on radio communications — AROC, ICAO phraseology, CTAF, Mayday/Pan-Pan.',
+  emergency:'Focus on emergency management — AEP, Mayday response, disabled aircraft, medevac, wildlife strikes.',
+  norfolk:'Focus on Norfolk Island specifics — YSNF layout, sea fog, wildlife, fuel management, backtrack.',
+  quiz:'Quiz mode: ask one question at a time. Wait for the answer before revealing the correct one. Start easy and increase difficulty.'
+};
+
+const QUICK={
+  general:['What is MOS Part 139?','Difference between ARO and WSO?','What NOTAMs must I issue?','Explain the OLS'],
+  aro:['Walk me through a runway inspection','How many consecutive lights need a NOTAM?','What is alligator cracking?','How do I check a PAPI?'],
+  wso:['Steps before any airside works','When does OLS penetration require closure?','What goes in a NOTAM for a crane?','Risk matrix explained'],
+  radio:['Standard arrival broadcast','How do I acknowledge a Mayday?','What is the CTAF at YSNF?','Readback requirements'],
+  emergency:['Mayday priority order — alone on shift','When do I call the ATSB?','Medevac activation steps','What does the AEP cover?'],
+  norfolk:['Sea fog — what do I do?','Green Parrot on the runway','Backtrack coordination','Why is fuel management critical?'],
+  quiz:['Start the quiz','Quiz me on ARO procedures','Quiz me on emergency responses','Quiz me on radio phraseology']
+};
+
+let history=[],topic='general';
+
+function setTopic(){
+  topic=document.getElementById('topic-select').value;
+  renderQ();
+  const names={general:'general knowledge',aro:'ARO procedures',markings:'aerodrome markings and signs',driving:'airside driving',sa:'situational awareness',sms:'safety management',wso:'WSO and works safety',ols:'OLS and declared distances',radio:'radio communications',emergency:'emergency management',norfolk:'Norfolk Island specifics',quiz:'quiz mode'};
+  addMsg('t','Switched to '+names[topic]+'. '+(topic==='quiz'?'I\'ll quiz you one question at a time — ready when you are.':'What would you like to know?'),null);
+}
+
+function renderQ(){
+  const w=document.getElementById('quick-wrap');
+  w.innerHTML=(QUICK[topic]||QUICK.general).map(p=>`<button class="qb" onclick="quickAsk('${p.replace(/'/g,"\\'")}')">&#9889; ${p}</button>`).join('');
+}
+
+function quickAsk(t){document.getElementById('inp').value=t;send();}
+
+function addMsg(role,text,ref){
+  const m=document.getElementById('msgs');
+  const d=document.createElement('div');
+  d.className='msg';
+  const isT=role==='t';
+  d.innerHTML=`<div class="avatar ${isT?'av-t':'av-u'}">${isT?'FA':'You'}</div><div class="bubble ${isT?'bt':'bu'}">${text.replace(/\n/g,'<br>')}${ref&&isT?`<div><span class="ref">${ref}</span></div>`:''}</div>`;
+  m.appendChild(d);
+  m.scrollTop=m.scrollHeight;
+}
+
+function addTyping(){
+  const m=document.getElementById('msgs');
+  const d=document.createElement('div');
+  d.className='msg';d.id='ti';
+  d.innerHTML='<div class="avatar av-t">FA</div><div class="bubble bt"><div class="typing"><div class="dot"></div><div class="dot"></div><div class="dot"></div></div></div>';
+  m.appendChild(d);m.scrollTop=m.scrollHeight;
+}
+
+function removeTyping(){const t=document.getElementById('ti');if(t)t.remove();}
+
+async function send(){
+  const inp=document.getElementById('inp');
+  const text=inp.value.trim();
+  if(!text)return;
+  inp.value='';inp.style.height='auto';
+  document.getElementById('btn-send').disabled=true;
+  addMsg('u',text);
+  history.push({role:'user',content:text});
+  addTyping();
+  const ctx=TOPIC_CONTEXTS[topic];
+  const sys=ctx?SYSTEM+'\n\nCurrent focus: '+ctx:SYSTEM;
+  try{
+    const r=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({model:'claude-sonnet-4-6',max_tokens:600,system:sys,messages:history})});
+    const d=await r.json();
+    const reply=d.content?.find(b=>b.type==='text')?.text||'Could not get a response. Please try again.';
+    removeTyping();
+    history.push({role:'assistant',content:reply});
+    const refs=['CASR Part 139','MOS Part 139','ICAO Annex 14','Doc 9981','AC 139','AIP','ATSA 2004','CASR Part 99','EPBC Act','ATSB'];
+    const ref=refs.find(r=>reply.includes(r))||null;
+    addMsg('t',reply,ref);
+  }catch(e){
+    removeTyping();
+    addMsg('t','Connection error — check your internet and try again.',null);
+  }
+  document.getElementById('btn-send').disabled=false;
+  document.getElementById('inp').focus();
+}
+
+function clearChat(){history=[];document.getElementById('msgs').innerHTML='';greet();}
+
+function greet(){
+  addMsg('t','Ready to study. Ask me anything about airport operations at YSNF — regulations, procedures, radio calls, emergencies — or select a topic above to focus your session.',null);
+}
+
+renderQ();greet();
+</script>
+</body>
+</html>

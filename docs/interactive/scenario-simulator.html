@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>FlightOps Academy — Scenario Simulator</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#f5f5f0;padding:1rem;color:#1a1a1a;max-width:720px;margin:0 auto}
+h1{font-size:15px;font-weight:500;margin-bottom:14px;color:#1a1a1a}
+select{font-size:12px;padding:5px 10px;border-radius:8px;border:1px solid #ccc;background:#fff;color:#1a1a1a}
+.hdr-btn{font-size:12px;padding:5px 12px;border-radius:8px;border:1px solid #ccc;background:#f0efe8;color:#555;cursor:pointer}
+.hdr-btn:hover{background:#e5e4dc;color:#1a1a1a}
+#header{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;flex-wrap:wrap;gap:8px}
+#score-strip{display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap}
+.sp{font-size:11px;font-weight:600;padding:3px 10px;border-radius:20px}
+.sp-t{background:#dbeafe;color:#1e3a8a}
+.sp-g{background:#dcfce7;color:#14532d}
+.sp-o{background:#fef3c7;color:#78350f}
+.sp-m{background:#fee2e2;color:#7f1d1d}
+#scenario-card{background:#fff;border:1px solid #e0dfda;border-radius:12px;padding:1rem 1.25rem;margin-bottom:12px}
+#s-meta{display:flex;gap:8px;margin-bottom:10px;flex-wrap:wrap;align-items:center}
+.s-badge{font-size:11px;font-weight:600;padding:3px 9px;border-radius:20px}
+.sb-mod{background:#dbeafe;color:#1e3a8a}
+.sb-easy{background:#dcfce7;color:#14532d}
+.sb-hard{background:#fee2e2;color:#7f1d1d}
+#s-time{font-size:12px;color:#aaa;margin-left:auto}
+#s-title{font-size:15px;font-weight:500;margin-bottom:8px}
+#s-body{font-size:13px;color:#555;line-height:1.65}
+#s-body strong{color:#1a1a1a;font-weight:500}
+label{font-size:12px;color:#888;display:block;margin-bottom:5px}
+textarea{width:100%;min-height:90px;font-size:13px;line-height:1.6;padding:10px 12px;border-radius:8px;border:1px solid #ccc;background:#fff;color:#1a1a1a;resize:vertical;font-family:inherit}
+textarea:focus{outline:none;border-color:#378ADD}
+#action-row{display:flex;gap:8px;margin:10px 0 12px;flex-wrap:wrap}
+#btn-submit{flex:2;padding:9px;border-radius:8px;border:1px solid #378ADD;background:#dbeafe;color:#1e40af;font-size:13px;font-weight:600;cursor:pointer;min-width:120px}
+#btn-submit:hover{background:#378ADD;color:#fff}
+#btn-submit:disabled{opacity:.4;cursor:default}
+#btn-skip{flex:1;padding:9px;border-radius:8px;border:1px solid #ccc;background:#f8f7f2;color:#555;font-size:12px;cursor:pointer}
+#btn-next{flex:1;padding:9px;border-radius:8px;border:1px solid #ccc;background:#f8f7f2;color:#555;font-size:12px;cursor:pointer;display:none}
+#loading{display:none;align-items:center;gap:8px;font-size:13px;color:#888;padding:8px 0}
+.dot{width:6px;height:6px;border-radius:50%;background:#ccc;animation:pulse 1.2s ease-in-out infinite}
+.dot:nth-child(2){animation-delay:.2s}.dot:nth-child(3){animation-delay:.4s}
+@keyframes pulse{0%,100%{opacity:.3}50%{opacity:1}}
+#feedback-card{background:#f8f7f2;border:1px solid #e0dfda;border-radius:12px;padding:1rem 1.25rem;margin-bottom:12px;display:none}
+#fb-header{display:flex;align-items:center;gap:8px;margin-bottom:10px}
+.gb{font-size:12px;font-weight:600;padding:4px 12px;border-radius:20px}
+.gb-strong{background:#dcfce7;color:#14532d}
+.gb-good{background:#dbeafe;color:#1e40af}
+.gb-partial{background:#fef3c7;color:#78350f}
+.gb-missed{background:#fee2e2;color:#7f1d1d}
+#fb-text{font-size:13px;color:#555;line-height:1.65;margin-bottom:10px}
+#fb-text strong{color:#1a1a1a}
+#model-ans{background:#fff;border:1px solid #e0dfda;border-radius:8px;padding:10px 14px}
+.ma-label{font-size:11px;font-weight:600;color:#aaa;margin-bottom:6px}
+.ma-step{font-size:13px;color:#444;line-height:1.6;padding:3px 0 3px 12px;border-left:2px solid #e0dfda;margin:3px 0}
+#history{margin-top:8px}
+.hi{display:flex;align-items:center;gap:8px;padding:6px 0;border-top:1px solid #e0dfda;font-size:12px;color:#666}
+.hg{width:22px;height:22px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;flex-shrink:0}
+p.credit{font-size:11px;color:#aaa;text-align:right;margin-top:10px}
+</style>
+</head>
+<body>
+<h1>FlightOps Academy — scenario simulator</h1>
+<div id="header">
+  <div style="display:flex;gap:8px;flex-wrap:wrap">
+    <select id="mode-select" onchange="pickMode()">
+      <option value="random">All modules</option>
+      <option value="aro">Module 3 — ARO</option>
+      <option value="markings">Module 3 — Markings</option>
+      <option value="driving">Module 3 — Airside driving</option>
+      <option value="sa">Module 3 — Situational awareness</option>
+      <option value="sms">Module 3 — SMS</option>
+      <option value="wso">Module 4 — WSO</option>
+      <option value="ols">Module 4 — OLS</option>
+      <option value="radio">Module 5 — Radio</option>
+      <option value="emergency">Module 6 — Emergency</option>
+      <option value="norfolk">Module 7 — Norfolk Island</option>
+    </select>
+    <select id="diff-select" onchange="pickMode()">
+      <option value="mixed">Mixed difficulty</option>
+      <option value="standard">Standard</option>
+      <option value="hard">Hard</option>
+    </select>
+  </div>
+  <button class="hdr-btn" onclick="newScenario()">New scenario</button>
+</div>
+<div id="score-strip">
+  <span class="sp sp-t" id="sc-total">0 scenarios</span>
+  <span class="sp sp-g" id="sc-good">0 strong/good</span>
+  <span class="sp sp-o" id="sc-ok">0 partial</span>
+  <span class="sp sp-m" id="sc-miss">0 missed</span>
+</div>
+<div id="scenario-card">
+  <div id="s-meta">
+    <span class="s-badge sb-mod" id="s-module"></span>
+    <span class="s-badge" id="s-diff"></span>
+    <span id="s-time"></span>
+  </div>
+  <p id="s-title"></p>
+  <p id="s-body"></p>
+</div>
+<label>Your response — what do you do?</label>
+<textarea id="response" placeholder="Type your response here. Be specific — list your actions in order, include radio calls, and note any NOTAM or documentation requirements."></textarea>
+<div id="action-row">
+  <button id="btn-submit" onclick="submitResponse()">Submit for assessment</button>
+  <button id="btn-skip" onclick="showAnswer()">Show model answer</button>
+  <button id="btn-next" onclick="newScenario()">Next scenario &rarr;</button>
+</div>
+<div id="loading"><div class="dot"></div><div class="dot"></div><div class="dot"></div><span>Assessing your response...</span></div>
+<div id="feedback-card">
+  <div id="fb-header">
+    <span id="gb"></span>
+    <span id="fb-title" style="font-size:13px;font-weight:500"></span>
+  </div>
+  <div id="fb-text"></div>
+  <div id="model-ans">
+    <p class="ma-label">Model answer</p>
+    <div id="ma-steps"></div>
+  </div>
+</div>
+<div id="history"></div>
+<p class="credit">FlightOps Academy — not for operational use. Assessment powered by Claude AI.</p>
+
+<script>
+const SCENARIOS=[
+{mod:'Module 3 — ARO',diff:'standard',time:'0615',title:'Opening inspection — unserviceable runway edge lights',body:'You are conducting your opening inspection at <strong>0615</strong>. The first RPT ATR-72 is inbound, ETA <strong>0705</strong>. Taxiing along the left side of runway 11, you count <strong>four consecutive edge lights unserviceable</strong> starting 300m from the threshold. It is still dark. What are your actions?',key:'consecutive lights NOTAM MOS two consecutive limit advise inbound maintenance document'},
+{mod:'Module 6 — Emergency',diff:'hard',time:'0847',title:'Mayday — engine failure on short final',body:'It is <strong>0847</strong>. You are alone on shift. A VH-registered Cessna 310 transmits: <strong>"Mayday Mayday Mayday, VH-XYZ, both engines rough, short final runway 11, two POB."</strong> Your phone is ringing at the same time — it is the airline asking about a delayed fuel order. What do you do?',key:'acknowledge aircraft first emergency services fire priority order ignore phone during mayday souls on board document'},
+{mod:'Module 7 — Norfolk Island',diff:'hard',time:'0530',title:'Sea fog — inbound RPT with deteriorating visibility',body:'It is <strong>0530</strong>. You completed your opening inspection in CAVOK conditions 20 minutes ago. Looking east, you can see sea fog forming on the horizon. The ATR-72 RPT service called inbound <strong>8 minutes ago</strong>, currently <strong>25 miles out</strong>. The dewpoint spread from your last observation was <strong>1.5°C</strong>. What do you do right now?',key:'visibility observation contact aircraft immediately deteriorating trend let pilot decide update every 2-3 minutes diversion alternates'},
+{mod:'Module 4 — WSO',diff:'standard',time:'1030',title:'OLS penetration — contractor crane on the apron',body:'A contractor arrives at <strong>1030</strong> with a <strong>22-metre telescoping crane</strong> to replace an apron floodlight. The crane is positioned <strong>40 metres from the runway 29 threshold</strong>. They want to start immediately — an aircraft is on the ground and is due to depart in 45 minutes. What do you do before authorising them to extend the crane?',key:'OLS assessment extended height not stowed NOTAM runway closure depart first contractor briefing works safety plan'},
+{mod:'Module 5 — Radio',diff:'standard',time:'1415',title:'Wildlife on runway — aircraft on approach',body:'It is <strong>1415</strong>. An ATR-72 has called 10 miles on final for runway 11. You have just spotted a <strong>Masked Booby sitting on the runway centreline approximately 400m from the threshold 11</strong>. You are in your inspection vehicle. Write out exactly what you say on the radio and describe your physical actions.',key:'broadcast wildlife runway advise pilot dispersal attempt booby slow to react provide information let pilot decide'},
+{mod:'Module 3 — ARO',diff:'hard',time:'1620',title:'Post-landing inspection — bird strike report',body:'At <strong>1620</strong>, an inbound charter Beechcraft King Air reports <strong>"possible bird strike on climb-out from the previous aerodrome"</strong>. It lands normally and taxies to the apron. The next scheduled movement is a medevac departure in <strong>30 minutes</strong>. The pilot mentions he heard a thud on the left engine — feathers are visible on the leading edge of the left wing. What do you do?',key:'runway inspection bird remains biological material notify maintenance aircraft unairworthy decision medevac priority document ATSB wildlife strike report'},
+{mod:'Module 6 — Emergency',diff:'standard',time:'2210',title:'After-hours medevac activation',body:'It is <strong>2210</strong>. You closed the aerodrome at <strong>2100</strong> and are at home when the Norfolk Island Hospital calls. A patient has a suspected major stroke and requires urgent transfer to Brisbane. A medevac King Air is available and can be on the ground at YSNF in <strong>90 minutes</strong>. What do you do, in order?',key:'reopen aerodrome lighting inspection runway ambulance access coordinate medevac desk Brisbane Centre brief aircraft document'},
+{mod:'Module 4 — WSO',diff:'hard',time:'0900',title:'Contractor works — unscheduled aircraft arriving mid-job',body:'A maintenance crew is resealing a section of Taxiway Alpha at <strong>0900</strong>. At <strong>0940</strong>, an unscheduled charter calls inbound, <strong>15 miles out</strong>, requesting to land. The taxiway crew has a sealing machine and two vehicles on the taxiway. What are your immediate actions?',key:'suspend works immediately vehicles clear taxiway visual confirmation advise aircraft sequence inbound works NOTAM status resume after'},
+{mod:'Module 3 — ARO',diff:'standard',time:'0740',title:'FOD — unidentified metal object on runway',body:'During your post-arrival inspection at <strong>0740</strong>, you find a <strong>metal bracket approximately 8cm long</strong> on the runway centreline, 600m from threshold 29. You do not know where it came from. The next movement is a departure in <strong>20 minutes</strong>. What do you do?',key:'remove FOD photograph record location investigate source notify maintenance no NOTAM needed object removed document'},
+{mod:'Module 6 — Emergency',diff:'hard',time:'1555',title:'Fuel spill during refuelling — inbound aircraft 5 miles out',body:'At <strong>1555</strong>, during refuelling of the departing ATR-72, a coupling fails and <strong>approximately 200 litres of AVTUR spills onto the apron</strong>, under the left wing. The aircraft engines are not running. A second aircraft is <strong>5 miles inbound</strong>. What are your immediate actions?',key:'stop fuelling remove ignition sources no engine start fire service advise inbound hold or divert contain spill NOTAM document'},
+{mod:'Module 7 — Norfolk Island',diff:'standard',time:'1200',title:'Backtrack conflict — two movements at the same time',body:'At <strong>1200</strong>, an ATR-72 has just landed on runway 11 and needs to backtrack the full length to exit at the threshold 29 end. At the same time, a charter Cessna 172 calls ready for departure from threshold 29, wanting to use runway 29. Both pilots have heard each other on the radio. What do you do?',key:'backtrack conflict sequence one at a time ATR backtracks first vacates then Cessna departs visual confirmation broadcast'},
+{mod:'Module 8 — Security',diff:'standard',time:'1100',title:'Unescorted person photographing aircraft on the apron',body:'At <strong>1100</strong>, during a quiet period between movements, you notice a person in civilian clothing walking across the apron toward the terminal. They are not wearing an ASIC. They appear to be photographing the aircraft on Bay 1. What do you do?',key:'approach challenge ASIC airside vehicle permit escort if no ASIC landside security incident report document'},
+{mod:'Module 5 — Radio',diff:'hard',time:'0650',title:'Radio failure on the movement area',body:'You are conducting your opening runway inspection at <strong>0650</strong> when your vehicle radio stops responding. You are currently <strong>800m from the threshold 11 end on the runway</strong>. The first inbound aircraft has called 20 miles on final. What do you do?',key:'clear runway immediately exit movement area handheld backup call operations room mobile phone broadcast from ops room advise aircraft'},
+{mod:'Module 3 — ARO',diff:'hard',time:'1445',title:'PAPI appears misaligned — pilot report after landing',body:'At <strong>1445</strong>, a Fokker 50 pilot calls after landing: <strong>"Your PAPI runway 29 was showing 3 red 1 white during my approach at normal glidepath. Might want to check it."</strong> Another aircraft is <strong>12 miles inbound for runway 29</strong>. What do you do?',key:'PAPI suspect take out service NOTAM advise inbound visual approach only investigate alignment do not leave suspect PAPI in service'},
+{mod:'Module 6 — Emergency',diff:'standard',time:'0815',title:'Disabled aircraft on runway — two inbound',body:'At <strong>0815</strong>, the departing ATR-72 aborts its take-off with a right main gear collapse. The aircraft is on the centreline, ~900m from threshold 11. Passengers are evacuating via emergency slides. Two inbound aircraft: one <strong>30 miles out</strong>, one <strong>8 miles out</strong>. What do you do?',key:'close aerodrome NOTAM advise both inbound aircraft divert or hold ATSB notification preserve scene recovery Brisbane Centre'},
+{mod:'Module 7 — Norfolk Island',diff:'hard',time:'0600',title:'Norfolk Island Green Parrot on the runway threshold',body:'At <strong>0600</strong> during your opening inspection, you find what appears to be a <strong>Norfolk Island Green Parrot</strong> resting on the runway at the threshold 11 markings. The first movement is in <strong>35 minutes</strong>. Standard dispersal methods are in your vehicle.',key:'do not disturb endangered EPBC Act contact Parks Australia ranger no pyrotechnics no vehicle approach delay movement if necessary document'},
+,
+{mod:'Module 3 — Markings',diff:'standard',time:'0710',title:'Faded hold short marking — RPT arrival in 30 minutes',body:'During your opening inspection at <strong>0710</strong>, you notice the hold short marking on Taxiway Alpha at the runway 11 intersection is significantly faded. The pattern is visible but it is not the clearly defined yellow you would expect. The first RPT arrival is in <strong>30 minutes</strong>. What do you do?',key:'urgent defect record notify maintenance brief vehicle operators NOTAM if severe runway incursion risk hold short critical'},
+{mod:'Module 3 — Airside driving',diff:'hard',time:'0645',title:'Radio failure on the runway during opening inspection',body:'You are conducting your opening runway inspection at <strong>0645</strong> in your inspection vehicle. Your radio stops responding mid-transmission. You are currently <strong>900m from threshold 11</strong> on the centreline. The first inbound aircraft called 20 miles on final <strong>3 minutes ago</strong>. What do you do immediately?',key:'clear runway immediately handheld backup mobile phone operations room do not stay on runway without radio broadcast from ops room advise aircraft'},
+{mod:'Module 3 — Situational awareness',diff:'hard',time:'0830',title:'Multiple competing demands — situational awareness breakdown',body:'You are on the runway conducting an inspection at <strong>0830</strong>. Your radio announces an inbound aircraft 20 miles out. You simultaneously discover <strong>four consecutive edge lights unserviceable</strong>. Your mobile phone rings — it is the crane contractor asking if they can start work. What is your priority sequence and why?',key:'acknowledge aircraft first vacate runway issue NOTAM for lights call contractor last aircraft safety before everything else'},
+{mod:'Module 4 — OLS',diff:'hard',time:'1015',title:'OLS penetration calculation — material stockpile near threshold',body:'A contractor proposes positioning a material stockpile <strong>120m from threshold 29</strong>, 10m to the right of the runway centreline. The stockpile will be <strong>5 metres high</strong>. You need to determine whether this penetrates the OLS before authorising the works. What is your assessment and what action do you take?',key:'calculation 120 x 0.02 = 2.4m maximum 5m exceeds limit penetration of 2.6m NOTAM required move or reduce height or close runway'},
+{mod:'Module 3 — SMS',diff:'standard',time:'1400',title:'Near-miss — contractor vehicle crosses hold short without clearance',body:'At <strong>1400</strong>, you observe a contractor vehicle cross the hold short marking onto Taxiway Alpha without your authorisation. No aircraft were on the runway at the time. The contractor says they thought the taxiway was clear and they were just cutting across. What do you do?',key:'stop works immediately debrief contractor document incident ASIR report SMS near miss do not dismiss safety culture just culture'},
+{mod:'Module 3 — Signs',diff:'standard',time:'0600',title:'Unilluminated runway designation sign — pre-dawn inspection',body:'During your pre-dawn opening inspection at <strong>0600</strong>, you notice the runway designation sign at the Taxiway Alpha / runway 11 intersection is not illuminated. It is still dark. The first scheduled RPT arrival is in <strong>45 minutes</strong>. What do you do?',key:'significant defect NOTAM night operations affected notify maintenance assess risk brief vehicle operators unlit mandatory sign is hazard'}
+];
+
+const LOCAL_ANSWERS={
+'Opening inspection — unserviceable runway edge lights':'1. Record defect — exact position, time, 4 consecutive lights left side 300m from threshold 11\n2. MOS Part 139 permits maximum 2 consecutive unserviceable — 4 requires immediate action\n3. Issue NOTAM before the aircraft arrives — advise night ops runway 11 affected\n4. Contact maintenance — urgent repair required\n5. Advise inbound ATR-72 via broadcast\n6. Document all actions with times in shift log',
+'Mayday — engine failure on short final':'1. Do not answer the phone — Mayday takes absolute priority\n2. Acknowledge: "VH-XYZ, Norfolk Radio, Mayday acknowledged, runway 11 clear, emergency services activated"\n3. Call Norfolk Island Fire Service immediately\n4. Confirm no other traffic on or near runway\n5. Ask "VH-XYZ, confirm souls on board and fuel"\n6. Let phone ring — call airline after emergency managed\n7. Notify ATSB when aircraft is on ground\n8. Document everything with times',
+'Sea fog — inbound RPT with deteriorating visibility':'1. Take visibility observation immediately — estimate in metres\n2. Contact aircraft NOW: "Visibility [estimate], sea fog developing from east, dewpoint spread 1.5 degrees, trend deteriorating. Advise intentions"\n3. Update every 2-3 minutes with fresh observations\n4. Do not make the landing decision — provide accurate real-time information\n5. Know the alternates — Lord Howe Island — have contacts ready\n6. If visibility closes below VMC minimums, advise aircraft immediately',
+};
+
+let current=null,scores={total:0,strong:0,good:0,ok:0,miss:0},hist=[],filtered=[...SCENARIOS];
+
+function pickMode(){
+  const mod=document.getElementById('mode-select').value;
+  const diff=document.getElementById('diff-select').value;
+  filtered=SCENARIOS.filter(s=>{
+    const mOk=mod==='random'||s.mod.toLowerCase().includes(mod);
+    const dOk=diff==='mixed'||(diff==='standard'&&s.diff==='standard')||(diff==='hard'&&s.diff==='hard');
+    return mOk&&dOk;
+  });
+  if(!filtered.length) filtered=[...SCENARIOS];
+  newScenario();
+}
+
+function newScenario(){
+  const pool=filtered.length?filtered:SCENARIOS;
+  const prev=current?current.title:'';
+  let s;do{s=pool[Math.floor(Math.random()*pool.length)];}while(s.title===prev&&pool.length>1);
+  current=s;
+  document.getElementById('s-module').textContent=s.mod;
+  const de=document.getElementById('s-diff');
+  de.textContent=s.diff==='hard'?'Hard':'Standard';
+  de.className='s-badge '+(s.diff==='hard'?'sb-hard':'sb-easy');
+  document.getElementById('s-time').textContent='⏱ '+s.time+' local';
+  document.getElementById('s-title').textContent=s.title;
+  document.getElementById('s-body').innerHTML=s.body;
+  document.getElementById('response').value='';
+  document.getElementById('response').disabled=false;
+  document.getElementById('btn-submit').disabled=false;
+  document.getElementById('btn-submit').style.display='';
+  document.getElementById('btn-skip').style.display='';
+  document.getElementById('btn-next').style.display='none';
+  document.getElementById('feedback-card').style.display='none';
+  document.getElementById('loading').style.display='none';
+}
+
+async function submitResponse(){
+  const resp=document.getElementById('response').value.trim();
+  if(resp.length<20){document.getElementById('response').style.borderColor='#f09595';setTimeout(()=>document.getElementById('response').style.borderColor='',1500);return;}
+  document.getElementById('btn-submit').disabled=true;
+  document.getElementById('btn-skip').style.display='none';
+  document.getElementById('loading').style.display='flex';
+  document.getElementById('feedback-card').style.display='none';
+  const sys=`You are an experienced Australian airport operations examiner assessing responses from a Flight Operations Officer candidate at Norfolk Island Airport (YSNF). You assess based on CASA Part 139, MOS Part 139, and standard Australian aerodrome operations practice.
+
+Grade as: STRONG (correct priority order, all critical actions, regulatory awareness), GOOD (most actions correct, minor gaps), PARTIAL (core understanding but significant gaps), or MISSED (fundamental errors or missing critical safety actions).
+
+Respond ONLY in valid JSON with no markdown fences:
+{"grade":"STRONG|GOOD|PARTIAL|MISSED","headline":"One sentence summary","feedback":"2-3 sentences specific feedback referencing procedures and MOS sections","modelAnswer":"Step by step model answer as numbered points separated by newlines. Include radio calls. 4-8 steps."}`;
+  const msg=`SCENARIO: ${current.title}\nSITUATION: ${current.body.replace(/<[^>]+>/g,'')}\nKEY ELEMENTS: ${current.key}\nCANDIDATE RESPONSE: ${resp}`;
+  try{
+    const r=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({model:'claude-sonnet-4-6',max_tokens:900,messages:[{role:'user',content:msg}],system:sys})});
+    const d=await r.json();
+    const t=d.content?.find(b=>b.type==='text')?.text||'{}';
+    let p;try{p=JSON.parse(t);}catch(e){p={grade:'PARTIAL',headline:'Assessment complete',feedback:'Review the model answer and self-assess.',modelAnswer:LOCAL_ANSWERS[current.title]||'Review the relevant module in your handbook. Key elements: '+current.key};}
+    render(p);
+  }catch(e){render({grade:'PARTIAL',headline:'Offline — self-assess',feedback:'Could not connect to assessment engine. Compare your response with the model answer.',modelAnswer:LOCAL_ANSWERS[current.title]||'Review the relevant module. Key elements: '+current.key});}
+  document.getElementById('loading').style.display='none';
+}
+
+function render(p){
+  scores.total++;
+  const gmap={STRONG:{cls:'gb-strong',sc:'strong'},GOOD:{cls:'gb-good',sc:'good'},PARTIAL:{cls:'gb-partial',sc:'ok'},MISSED:{cls:'gb-missed',sc:'miss'}};
+  const g=gmap[p.grade]||gmap.PARTIAL;
+  scores[g.sc]++;
+  const gb=document.getElementById('gb');
+  gb.textContent=p.grade;gb.className='gb '+g.cls;
+  document.getElementById('fb-title').textContent=p.headline||'';
+  document.getElementById('fb-text').innerHTML=(p.feedback||'').replace(/\n/g,'<br>');
+  const steps=(p.modelAnswer||'').split('\n').filter(l=>l.trim()).map(l=>l.replace(/^\d+\.\s*/,'').replace(/^[•\-]\s*/,''));
+  document.getElementById('ma-steps').innerHTML=steps.map(s=>`<div class="ma-step">${s}</div>`).join('');
+  document.getElementById('feedback-card').style.display='block';
+  document.getElementById('response').disabled=true;
+  document.getElementById('btn-submit').style.display='none';
+  document.getElementById('btn-next').style.display='';
+  document.getElementById('sc-total').textContent=scores.total+' scenario'+(scores.total!==1?'s':'');
+  document.getElementById('sc-good').textContent=(scores.strong+scores.good)+' strong/good';
+  document.getElementById('sc-ok').textContent=scores.ok+' partial';
+  document.getElementById('sc-miss').textContent=scores.miss+' missed';
+  hist.unshift({t:current.title,g:p.grade,c:g.cls});
+  if(hist.length>5)hist.pop();
+  document.getElementById('history').innerHTML=hist.map(h=>`<div class="hi"><div class="hg ${h.c}">${h.g[0]}</div><span>${h.t}</span></div>`).join('');
+}
+
+function showAnswer(){
+  render({grade:'PARTIAL',headline:'Model answer shown',feedback:'Compare the model answer with your response. Assess honestly whether you had the correct priority order and identified all critical actions.',modelAnswer:LOCAL_ANSWERS[current.title]||'Review the relevant module. Key elements: '+current.key});
+}
+
+newScenario();
+</script>
+</body>
+</html>

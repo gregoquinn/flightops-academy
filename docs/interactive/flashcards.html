@@ -1,0 +1,357 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>FlightOps Academy — Flashcard Deck</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#f5f5f0;padding:1rem;color:#1a1a1a;max-width:680px;margin:0 auto}
+h1{font-size:16px;font-weight:500;margin-bottom:14px;color:#1a1a1a}
+#controls{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:14px}
+#cat-select{font-size:13px;padding:6px 10px;border-radius:8px;border:1px solid #ccc;background:#fff;color:#1a1a1a;flex:1;min-width:160px}
+.ctrl-btn{font-size:12px;padding:6px 12px;border-radius:8px;border:1px solid #ccc;background:#f0efe8;color:#555;cursor:pointer;white-space:nowrap}
+.ctrl-btn:hover{background:#e5e4dc;color:#1a1a1a}
+#progress-wrap{margin-bottom:12px}
+#progress-row{display:flex;justify-content:space-between;align-items:center;margin-bottom:5px}
+#prog-label{font-size:12px;color:#888}
+#score-label{font-size:12px;color:#555}
+#prog-bar{height:4px;background:#e0dfda;border-radius:4px;overflow:hidden}
+#prog-fill{height:100%;background:#378ADD;border-radius:4px;transition:width .3s}
+#card-area{perspective:1000px;height:210px;margin-bottom:12px;cursor:pointer}
+#card{width:100%;height:100%;position:relative;transform-style:preserve-3d;transition:transform .45s cubic-bezier(.4,0,.2,1)}
+#card.flipped{transform:rotateY(180deg)}
+.face{position:absolute;width:100%;height:100%;backface-visibility:hidden;border-radius:12px;border:1px solid #e0dfda;display:flex;flex-direction:column;justify-content:center;align-items:center;padding:1.5rem;text-align:center}
+#front{background:#ffffff}
+#back{background:#f8f7f2;transform:rotateY(180deg)}
+.cat-badge{font-size:11px;font-weight:600;padding:3px 10px;border-radius:20px;position:absolute;top:14px;left:50%;transform:translateX(-50%);white-space:nowrap}
+#front-q{font-size:15px;font-weight:500;color:#1a1a1a;line-height:1.5;max-width:480px}
+#front-hint{font-size:11px;color:#aaa;position:absolute;bottom:14px}
+#back-a{font-size:13px;color:#1a1a1a;line-height:1.6;max-width:480px}
+#back-ref{font-size:11px;color:#aaa;position:absolute;bottom:14px;font-style:italic}
+#nav{display:flex;align-items:center;gap:10px;margin-bottom:12px}
+#nav button{flex:1;padding:9px;border-radius:8px;border:1px solid #ccc;background:#fff;color:#1a1a1a;font-size:13px;cursor:pointer}
+#nav button:hover{background:#f0efe8}
+#nav button:disabled{opacity:.3;cursor:default}
+#card-num{font-size:12px;color:#aaa;min-width:80px;text-align:center}
+#feedback{display:flex;gap:8px;margin-bottom:12px}
+.fb-btn{flex:1;padding:8px;border-radius:8px;border:1px solid;font-size:12px;font-weight:600;cursor:pointer}
+#btn-know{background:#dcfce7;color:#166534;border-color:#86efac}
+#btn-know:hover{background:#16a34a;color:#fff}
+#btn-again{background:#fef3c7;color:#92400e;border-color:#fcd34d}
+#btn-again:hover{background:#d97706;color:#fff}
+#complete{display:none;background:#fff;border:1px solid #e0dfda;border-radius:12px;padding:2rem;text-align:center;margin-bottom:12px}
+#complete h3{font-size:16px;font-weight:500;margin-bottom:8px}
+#complete p{font-size:13px;color:#555;margin-bottom:16px}
+p.note{font-size:11px;color:#aaa;text-align:right;margin-top:8px}
+</style>
+</head>
+<body>
+<h1>FlightOps Academy — flashcard deck</h1>
+<div id="controls">
+  <select id="cat-select" onchange="filterCat()">
+    <option value="all">All modules (169 cards)</option>
+    <option value="fundamentals">Module 1 — Aviation fundamentals</option>
+    <option value="daily">Module 2 — Daily operations</option>
+    <option value="aro">Module 3 — ARO</option>
+    <option value="markings">Module 3 — Aerodrome markings</option>
+    <option value="signs">Module 3 — Aerodrome signs</option>
+    <option value="driving">Module 3 — Airside driving</option>
+    <option value="sa">Module 3 — Situational awareness</option>
+    <option value="sms">Module 3 — Safety management</option>
+    <option value="wso">Module 4 — WSO</option>
+    <option value="ols">Module 4 — OLS and declared distances</option>
+    <option value="radio">Module 5 — Radio</option>
+    <option value="emergency">Module 6 — Emergency</option>
+    <option value="norfolk">Module 7 — Norfolk Island</option>
+    <option value="security">Module 8 — Security</option>
+    <option value="glossary">Glossary and definitions</option>
+  </select>
+  <button class="ctrl-btn" onclick="shuffle()">Shuffle</button>
+  <button class="ctrl-btn" onclick="restart()">Restart</button>
+</div>
+<div id="progress-wrap">
+  <div id="progress-row">
+    <span id="prog-label">Card 1 of 169</span>
+    <span id="score-label">Known: 0 &nbsp;·&nbsp; Review: 0</span>
+  </div>
+  <div id="prog-bar"><div id="prog-fill" style="width:0%"></div></div>
+</div>
+<div id="card-area" onclick="flip()" role="button" aria-label="Flip card" tabindex="0" onkeydown="if(event.key==='Enter'||event.key===' ')flip()">
+  <div id="card">
+    <div class="face" id="front">
+      <span class="cat-badge" id="cat-badge"></span>
+      <p id="front-q"></p>
+      <span id="front-hint">tap to reveal answer</span>
+    </div>
+    <div class="face" id="back">
+      <span class="cat-badge" id="cat-badge-b"></span>
+      <p id="back-a"></p>
+      <span id="back-ref"></span>
+    </div>
+  </div>
+</div>
+<div id="feedback">
+  <button class="fb-btn" id="btn-know" onclick="markKnow()">Got it</button>
+  <button class="fb-btn" id="btn-again" onclick="markAgain()">Review again</button>
+</div>
+<div id="nav">
+  <button onclick="prev()" id="btn-prev">&larr; Prev</button>
+  <span id="card-num"></span>
+  <button onclick="next()" id="btn-next">Next &rarr;</button>
+</div>
+<div id="complete">
+  <h3>Deck complete</h3>
+  <p id="complete-msg"></p>
+  <button class="ctrl-btn" onclick="restart()" style="margin-right:8px">Start over</button>
+  <button class="ctrl-btn" onclick="reviewOnly()">Review missed cards only</button>
+</div>
+<p class="note">FlightOps Academy — not for operational use</p>
+<script>
+const CARDS=[
+{cat:"fundamentals",cb:"#dbeafe",ct:"#1e3a8a",q:"What does CASA stand for and what is its primary function?",a:"Civil Aviation Safety Authority. Australia's independent aviation safety regulator — it makes the rules, certifies operators, and enforces compliance. It does not operate aircraft or provide ATC.",ref:"Civil Aviation Act 1988"},
+{cat:"fundamentals",cb:"#dbeafe",ct:"#1e3a8a",q:"What is CASR Part 139?",a:"Civil Aviation Safety Regulations Part 139 — the primary regulation governing certified aerodromes in Australia. It establishes certification requirements, operator obligations, and the standards aerodromes must meet.",ref:"CASR Part 139"},
+{cat:"fundamentals",cb:"#dbeafe",ct:"#1e3a8a",q:"What is the relationship between CASR Part 139 and MOS Part 139?",a:"CASR Part 139 says WHAT must be done. MOS Part 139 (Manual of Standards) says HOW it must be done and to what technical standard. The MOS has the operational detail you use every day.",ref:"MOS Part 139"},
+{cat:"fundamentals",cb:"#dbeafe",ct:"#1e3a8a",q:"What does Airservices Australia provide that CASA does not?",a:"Air traffic control, aeronautical information services (AIP, NOTAMs), ARFF at major airports, and communication/navigation infrastructure. CASA regulates — Airservices operates.",ref:"Airspace Act 2007"},
+{cat:"fundamentals",cb:"#dbeafe",ct:"#1e3a8a",q:"What is ICAO and why does it matter to an Australian FOO?",a:"International Civil Aviation Organisation — the UN agency that sets global aviation standards. Australia is a signatory to the Chicago Convention and must comply with ICAO Annex 14 for aerodrome operations.",ref:"Chicago Convention 1944"},
+{cat:"fundamentals",cb:"#dbeafe",ct:"#1e3a8a",q:"What is ICAO Annex 14?",a:"The ICAO standard for Aerodromes (Volume 1: Design and Operations). Sets the international baseline for runway dimensions, lighting, markings, OLS, and operations that MOS Part 139 is built on.",ref:"ICAO Annex 14"},
+{cat:"fundamentals",cb:"#dbeafe",ct:"#1e3a8a",q:"What is ICAO Doc 9981?",a:"PANS-Aerodromes — Procedures for Air Navigation Services relating to aerodrome operations. Covers inspection procedures, surface condition reporting, wildlife management, and works safety.",ref:"ICAO Doc 9981"},
+{cat:"fundamentals",cb:"#dbeafe",ct:"#1e3a8a",q:"What is the aerodrome reference code for YSNF?",a:"4C — Code 4 means reference field length of 1,800m or more; Code C means aircraft wingspan 24m to less than 36m. Designed to serve aircraft like the ATR 72.",ref:"AIP AD YSNF"},
+{cat:"fundamentals",cb:"#dbeafe",ct:"#1e3a8a",q:"What is the AIP and who maintains it?",a:"Aeronautical Information Publication — the authoritative source for Australian aviation procedures and aerodrome data. Maintained by Airservices Australia at airservicesaustralia.com/aip.",ref:"AIP Australia"},
+{cat:"fundamentals",cb:"#dbeafe",ct:"#1e3a8a",q:"What is NAIPS?",a:"National Aeronautical Information Processing System — Airservices Australia's portal at naips.airservicesaustralia.com for filing and retrieving NOTAMs and accessing weather briefings.",ref:"Airservices Australia"},
+{cat:"fundamentals",cb:"#dbeafe",ct:"#1e3a8a",q:"What is a METAR?",a:"Meteorological Aerodrome Report — standardised weather observation for an aerodrome issued at regular intervals. Contains wind, visibility, weather, cloud, temperature, dewpoint, and QNH.",ref:"AIP Australia"},
+{cat:"fundamentals",cb:"#dbeafe",ct:"#1e3a8a",q:"What is a TAF?",a:"Terminal Area Forecast — a weather forecast for a specific aerodrome, typically covering 24 or 30 hours. Used to plan for expected conditions during your shift.",ref:"AIP Australia"},
+{cat:"fundamentals",cb:"#dbeafe",ct:"#1e3a8a",q:"What legislation gives CASA its powers?",a:"The Civil Aviation Act 1988 — the primary Act of Parliament that establishes CASA, defines its powers, and sets the framework for aviation safety regulation in Australia.",ref:"Civil Aviation Act 1988"},
+{cat:"fundamentals",cb:"#dbeafe",ct:"#1e3a8a",q:"What are CASA Advisory Circulars and are they legally binding?",a:"Guidance material explaining how to comply with regulations. NOT legally binding but represent CASA's interpretation of compliance. Following the AC is the safest way to demonstrate compliance.",ref:"CASA"},
+{cat:"fundamentals",cb:"#dbeafe",ct:"#1e3a8a",q:"What is Brisbane Centre and when do you contact them?",a:"Airservices Australia's en-route ATC facility for the Brisbane FIR. Contact them to notify of aerodrome closure, aircraft emergencies at YSNF, and significant operational changes affecting inbound aircraft.",ref:"AIP Australia"},
+{cat:"daily",cb:"#dcfce7",ct:"#14532d",q:"What are the three phases of an airport operations shift?",a:"Opening (inspection, activation, brief), Operations (monitoring, coordination, response), and Closing (final inspection, documentation, handover or secure).",ref:"Module 2"},
+{cat:"daily",cb:"#dcfce7",ct:"#14532d",q:"What desk checks do you complete before going outside?",a:"Weather (METAR, TAF, SIGMETs), NOTAM review on NAIPS, and the day's movement schedule. Build a picture of the day before conducting the physical inspection.",ref:"Module 2"},
+{cat:"daily",cb:"#dcfce7",ct:"#14532d",q:"What dewpoint spread suggests fog risk at YSNF?",a:"Less than 3°C — and particularly watch for less than 2°C at dawn. Sea fog can form in under 5 minutes.",ref:"Module 7"},
+{cat:"daily",cb:"#dcfce7",ct:"#14532d",q:"What radio call do you make before entering the movement area?",a:"'All stations [aerodrome], [callsign], runway inspection, entering runway [number] at [time], [frequency].' Pause and listen for traffic before entering.",ref:"Module 5"},
+{cat:"daily",cb:"#dcfce7",ct:"#14532d",q:"What must every shift log entry include?",a:"Time (UTC or local — consistent), what happened, what action was taken, and the outcome. Write it as if a CASA auditor will read it tomorrow.",ref:"Module 2"},
+{cat:"daily",cb:"#dcfce7",ct:"#14532d",q:"What does RPT stand for?",a:"Regular Public Transport — scheduled airline services carrying passengers or cargo for hire or reward. At YSNF this means the scheduled ATR 72 services.",ref:"CASR definition"},
+{cat:"daily",cb:"#dcfce7",ct:"#14532d",q:"What must you do if a pilot reports a possible tyre problem on landing?",a:"Inspect the runway immediately before the next aircraft uses it. Broadcast the runway temporarily unavailable. Look for tyre fragments, rubber debris, surface damage, and fluid trails.",ref:"Module 3"},
+{cat:"daily",cb:"#dcfce7",ct:"#14532d",q:"What safety rules apply during aircraft refuelling?",a:"No smoking within 15m, no engine starts, bonding lead connected before fuel cap opened, fire extinguisher accessible, FOO or delegate monitors throughout.",ref:"Module 2"},
+{cat:"daily",cb:"#dcfce7",ct:"#14532d",q:"What does 'continuous escort' mean for a non-ASIC holder airside?",a:"The ASIC holder must remain with the non-ASIC holder at all times. Cannot leave them alone even briefly. If the escort leaves, the visitor goes with them.",ref:"Module 8"},
+{cat:"daily",cb:"#dcfce7",ct:"#14532d",q:"What must be done before the aerodrome is reopened after an on-runway accident?",a:"ATSB must authorise movement, wreckage cleared by authorised contractor, movement area inspected and confirmed clear, NOTAM issued for reopening, management formally authorises.",ref:"Module 6"},
+{cat:"aro",cb:"#fef3c7",ct:"#78350f",q:"What are the main elements of a runway inspection?",a:"Surface (cracks, FOD, rubber, drainage), markings (centreline, threshold, aiming point, TDZ, designator), lighting (edge lights, threshold, PAPI), runway strip, shoulders, and threshold areas.",ref:"MOS Part 139 Ch.4"},
+{cat:"aro",cb:"#fef3c7",ct:"#78350f",q:"How many consecutive runway edge lights can be unserviceable before a NOTAM is required?",a:"No more than two consecutive lights should be unserviceable. Three or more require a NOTAM and may prevent night operations on that runway direction.",ref:"MOS Part 139"},
+{cat:"aro",cb:"#fef3c7",ct:"#78350f",q:"What colours do runway threshold lights show and to whom?",a:"Green to approaching aircraft (this is where you land). Red to aircraft looking back down the runway (do not land beyond this point).",ref:"MOS Part 139 / Annex 14"},
+{cat:"aro",cb:"#fef3c7",ct:"#78350f",q:"What is the correct PAPI indication for an aircraft on the glidepath?",a:"2 white and 2 red lights. All white = too high. All red = dangerously low. The correct indication is always 2 red (left) / 2 white (right) as seen from the approach direction.",ref:"MOS Part 139"},
+{cat:"aro",cb:"#fef3c7",ct:"#78350f",q:"What action do you take if you suspect a PAPI is misaligned?",a:"Take it out of service immediately. Issue a NOTAM advising PAPI unserviceable and visual approach guidance not available. Arrange inspection and realignment before returning to service.",ref:"Module 3"},
+{cat:"aro",cb:"#fef3c7",ct:"#78350f",q:"What colour are taxiway edge lights?",a:"Blue. Runway edge lights = white. Taxiway centreline lights (if installed) = green. Stop bars = red.",ref:"MOS Part 139 / Annex 14"},
+{cat:"aro",cb:"#fef3c7",ct:"#78350f",q:"What does the aerodrome beacon signal at YSNF?",a:"Alternating white and green — the international signal for a civil land aerodrome. Operates dusk to dawn or when visibility is reduced.",ref:"ICAO Annex 14"},
+{cat:"aro",cb:"#fef3c7",ct:"#78350f",q:"What is FOD?",a:"Foreign Object Debris — any object on the movement area that does not belong there and could cause damage to an aircraft or injury to personnel.",ref:"AC 139-01"},
+{cat:"aro",cb:"#fef3c7",ct:"#78350f",q:"What is alligator cracking?",a:"A network of interconnected cracks resembling alligator skin — indicates structural fatigue failure of the pavement layers. Significant defect that can progress rapidly to pothole formation.",ref:"AC 139-14"},
+{cat:"aro",cb:"#fef3c7",ct:"#78350f",q:"At what pothole depth does a pavement defect become a hazard?",a:"Greater than 50mm depth. 20–50mm = significant (arrange repair). Less than 20mm = record and monitor.",ref:"MOS Part 139"},
+{cat:"aro",cb:"#fef3c7",ct:"#78350f",q:"What is rubber contamination and why does it matter?",a:"Accumulated tyre rubber deposits from repeated landing contact in the touchdown zone. Reduces friction when wet, can cause aquaplaning. Remove when surface appears dark, smooth, and non-porous.",ref:"MOS Part 139 s4.13"},
+{cat:"aro",cb:"#fef3c7",ct:"#78350f",q:"What is the PCN?",a:"Pavement Classification Number — a number expressing the bearing strength of a pavement for unrestricted operations. Published in AIP AD. Aircraft whose ACN exceeds the PCN may cause pavement damage.",ref:"AIP AD YSNF"},
+{cat:"aro",cb:"#fef3c7",ct:"#78350f",q:"What is the runway strip at YSNF and how wide is it?",a:"The graded and cleared area either side of the runway. At YSNF it extends 150m either side of the runway centreline. Must be kept clear of obstacles.",ref:"MOS Part 139"},
+{cat:"aro",cb:"#fef3c7",ct:"#78350f",q:"What is the touchdown zone?",a:"The first 900m of runway from each threshold — where aircraft tyres first contact the runway. Receives highest pavement stress. Identified by white rectangular bar markings.",ref:"ICAO Annex 14"},
+{cat:"aro",cb:"#fef3c7",ct:"#78350f",q:"What vehicle checks must you complete before every movement area inspection?",a:"Tyres, fuel, radio (correct frequency), all lights (amber beacon working), hi-vis vest on, inspection forms, camera for defect photos, FOD bag empty and accessible.",ref:"Module 2"},
+{cat:"aro",cb:"#fef3c7",ct:"#78350f",q:"What is the zone method for FOD inspection?",a:"Mentally divide the runway into zones and inspect each completely before moving to the next. Angle your view so the sun is behind you — small objects cast shadows that make them easier to spot.",ref:"Module 3"},
+{cat:"wso",cb:"#ede9fe",ct:"#4c1d95",q:"What does WSO stand for?",a:"Works Safety Officer — the qualified person responsible for planning and supervising works on or near the movement area of a certified aerodrome.",ref:"MOS Part 139 Ch.5"},
+{cat:"wso",cb:"#ede9fe",ct:"#4c1d95",q:"What is the first thing to assess before any airside works commence?",a:"OLS penetration — whether any equipment will penetrate the Obstacle Limitation Surface at its working position. Calculate maximum EXTENDED height, not stowed height.",ref:"MOS Part 139 Ch.5"},
+{cat:"wso",cb:"#ede9fe",ct:"#4c1d95",q:"What must happen before any works vehicle enters the movement area?",a:"NOTAM active (if required), works safety plan approved, contractor briefed, vehicle permit confirmed, ASIC checked or escort arranged, radio confirmed operational on CTAF.",ref:"Module 4"},
+{cat:"wso",cb:"#ede9fe",ct:"#4c1d95",q:"What is the WSO's procedure when an aircraft approaches during works?",a:"Issue suspension order — all vehicles hold position. Visually confirm all equipment is clear of the operational area. Advise aircraft or broadcast runway clear. Monitor movement. Resume when aircraft is fully clear.",ref:"Module 4"},
+{cat:"wso",cb:"#ede9fe",ct:"#4c1d95",q:"All NOTAM times are in what time zone?",a:"UTC — Coordinated Universal Time. NEVER local time. Norfolk Island Standard Time is UTC+11:30. Daylight Time is UTC+12:30. Getting this wrong can leave pilots without critical information.",ref:"AIP GEN 3.16"},
+{cat:"wso",cb:"#ede9fe",ct:"#4c1d95",q:"What does UFN mean in a NOTAM?",a:"Until Further Notice — no fixed end time. Use when duration is genuinely uncertain. Avoid as a default — time-limited NOTAMs are easier for pilots to plan around.",ref:"AIP GEN 3.16"},
+{cat:"wso",cb:"#ede9fe",ct:"#4c1d95",q:"What is the risk matrix formula?",a:"Risk Rating = Likelihood × Consequence. Both scored 1–5. Extreme (15–25): do not proceed. High (8–14): significant controls required. Medium (4–7): manageable with controls. Low (1–3): routine procedures.",ref:"Module 4"},
+{cat:"wso",cb:"#ede9fe",ct:"#4c1d95",q:"What is the OLS?",a:"Obstacle Limitation Surface — the three-dimensional protected airspace around an aerodrome within which obstacles must not penetrate. Includes approach, transitional, horizontal, conical, and take-off climb surfaces.",ref:"ICAO Annex 14 / MOS 139"},
+{cat:"wso",cb:"#ede9fe",ct:"#4c1d95",q:"If a contractor refuses your instructions, what do you do?",a:"Stop the work. Correct the behaviour. If they refuse to comply, direct them to leave the airside area immediately. Notify supervisor. Document in shift log. Do not allow return until issue is resolved.",ref:"Module 4"},
+{cat:"wso",cb:"#ede9fe",ct:"#4c1d95",q:"What must be in a NOTAM for works involving a crane?",a:"Location, maximum height AGL, period of works, OLS penetration status, advisory to pilots. Be specific — 'crane operating' alone is not sufficient.",ref:"Module 4"},
+{cat:"wso",cb:"#ede9fe",ct:"#4c1d95",q:"What is scope creep in airside works?",a:"When a contractor expands work beyond what was approved. Dangerous because the unapproved area is not covered by the works safety plan, NOTAM, or risk assessment. Stop and redirect immediately.",ref:"Module 4"},
+{cat:"wso",cb:"#ede9fe",ct:"#4c1d95",q:"What is the content of a pre-works contractor briefing?",a:"Your authority, specific work scope, permitted area boundaries, movement restrictions, radio procedures, emergency procedures, wildlife and FOD obligations, hi-vis requirements, no smoking rules.",ref:"Module 4"},
+{cat:"radio",cb:"#fce7f3",ct:"#831843",q:"What does AROC stand for and who needs one?",a:"Aviation Radio Operator Certificate — required to operate aeronautical radio equipment in Australia. FOOs, AROs, and WSOs all need one to legally use radio equipment on shift.",ref:"CASR Part 64"},
+{cat:"radio",cb:"#fce7f3",ct:"#831843",q:"What is the standard radio transmission structure?",a:"[Who you are calling] + [Who you are] + [Message]. Example: 'Norfolk Traffic, Golf Foxtrot Alpha Bravo Charlie, 10 miles final runway 11.'",ref:"AIP Australia"},
+{cat:"radio",cb:"#fce7f3",ct:"#831843",q:"What is the difference between Roger, Wilco, and Affirm?",a:"Roger = received your last transmission. Wilco = understand and will comply. Affirm = Yes. Never use 'okay' or 'yeah' — not standard phraseology.",ref:"ICAO Annex 10"},
+{cat:"radio",cb:"#fce7f3",ct:"#831843",q:"What is the difference between Over and Out?",a:"Over = finished transmitting, reply expected. Out = communication complete, no reply expected. Never say 'over and out' — they are mutually exclusive.",ref:"ICAO Annex 10"},
+{cat:"radio",cb:"#fce7f3",ct:"#831843",q:"How do you say QNH 1013 on the radio?",a:"QNH one zero one three — each digit individually. Wind 090 at 12 = 'zero niner zero at one two.'",ref:"ICAO Annex 10"},
+{cat:"radio",cb:"#fce7f3",ct:"#831843",q:"What is the phonetic word for the letter G?",a:"Golf. Full alphabet: Alpha Bravo Charlie Delta Echo Foxtrot Golf Hotel India Juliet Kilo Lima Mike November Oscar Papa Quebec Romeo Sierra Tango Uniform Victor Whiskey X-ray Yankee Zulu.",ref:"ICAO Annex 10"},
+{cat:"radio",cb:"#fce7f3",ct:"#831843",q:"What information should you always read back to a pilot?",a:"Runway in use, QNH, traffic information, and any emergency instructions. Good practice to read back anything safety-critical.",ref:"Module 5"},
+{cat:"radio",cb:"#fce7f3",ct:"#831843",q:"What is 121.5 MHz?",a:"The international emergency and guard frequency. Monitor continuously if your equipment allows. Acknowledge any Mayday on 121.5 and notify Brisbane Centre.",ref:"ICAO Annex 10"},
+{cat:"radio",cb:"#fce7f3",ct:"#831843",q:"What is a CTAF?",a:"Common Traffic Advisory Frequency — a designated frequency used by aircraft near an aerodrome without operating ATC. Broadcasts are advisory only — you provide information, not ATC clearances.",ref:"AIP Australia"},
+{cat:"radio",cb:"#fce7f3",ct:"#831843",q:"What is the readability scale for radio checks?",a:"1 = Unreadable, 2 = Readable now and then, 3 = Readable but with difficulty, 4 = Readable, 5 = Perfectly readable. Good response: 'Reading you five.'",ref:"ICAO Annex 10"},
+{cat:"radio",cb:"#fce7f3",ct:"#831843",q:"How do you call radio silence during an emergency?",a:"'All stations, all stations, all stations. [Aerodrome] Radio. Silence, Silence, Silence on [frequency]. Emergency in progress.' Cancel with: 'Distress traffic ended. Resume normal communications.'",ref:"ICAO Annex 10"},
+{cat:"radio",cb:"#fce7f3",ct:"#831843",q:"What is an MBZ?",a:"Mandatory Broadcast Zone — airspace around certain aerodromes where radio broadcasts are mandatory for all aircraft. Check AIP AD YSNF for current YSNF designation.",ref:"AIP Australia"},
+{cat:"emergency",cb:"#fee2e2",ct:"#7f1d1d",q:"What are the three international distress/urgency signals?",a:"Mayday (×3) = life-threatening emergency. Pan-Pan (×3) = urgent but not immediately life-threatening. Securite (×3) = safety information. Mayday always takes priority.",ref:"ICAO Annex 10"},
+{cat:"emergency",cb:"#fee2e2",ct:"#7f1d1d",q:"What is your first action when you receive a Mayday call?",a:"Listen — let the pilot complete their transmission. Then acknowledge: '[Callsign], [Aerodrome] Radio, Mayday acknowledged, runway [number] clear, emergency services being activated.'",ref:"Module 6"},
+{cat:"emergency",cb:"#fee2e2",ct:"#7f1d1d",q:"Mayday declared, you are alone on shift — what is the priority order?",a:"1. Acknowledge aircraft. 2. Activate emergency services. 3. Clear the runway. 4. Maintain radio contact. 5. Notify airline. You cannot do everything at once — this order saves lives.",ref:"Module 6"},
+{cat:"emergency",cb:"#fee2e2",ct:"#7f1d1d",q:"Who investigates aircraft accidents in Australia?",a:"The ATSB — Australian Transport Safety Bureau. CASA investigates regulatory compliance. Separate organisations, separate roles. ATSB notification is mandatory and must happen early.",ref:"Transport Safety Investigation Act 2003"},
+{cat:"emergency",cb:"#fee2e2",ct:"#7f1d1d",q:"What is the ATSB 24-hour notification number?",a:"1800 011 034. Also at atsb.gov.au. Mandatory for accidents and serious incidents. Report early — do not wait until the scene is cleared.",ref:"ATSB"},
+{cat:"emergency",cb:"#fee2e2",ct:"#7f1d1d",q:"What is a serious incident?",a:"An occurrence where an accident nearly occurred — runway incursions, bird strikes causing damage, gear collapse, engine failure, CFIT risk. All are mandatory ATSB reports.",ref:"Transport Safety Investigation Act 2003"},
+{cat:"emergency",cb:"#fee2e2",ct:"#7f1d1d",q:"What does the Airport Emergency Plan (AEP) cover?",a:"Aircraft accidents, incidents and fires, disabled aircraft, bomb threats, fuel spills, medical emergencies, security incidents, wildlife strikes, and natural disasters.",ref:"MOS Part 139 Ch.8"},
+{cat:"emergency",cb:"#fee2e2",ct:"#7f1d1d",q:"What is your role in an emergency — and what is it NOT?",a:"Your role: detect and assess, activate the right services, coordinate, control access, document. NOT your role: fight fires, provide medical treatment, or manage the investigation.",ref:"Module 6"},
+{cat:"emergency",cb:"#fee2e2",ct:"#7f1d1d",q:"What information must you collect after a wildlife strike report from a pilot?",a:"Phase of flight, location, number and size of animals, damage to aircraft, feathers or remains visible. Then inspect the aircraft and the runway for biological material.",ref:"AC 139-06"},
+{cat:"emergency",cb:"#fee2e2",ct:"#7f1d1d",q:"What must you brief the ambulance crew before they enter the apron for a medevac?",a:"Where to stand, where NOT to go (behind engines/props), when to approach (only on your signal after engines shut), that your instructions must be followed immediately.",ref:"Module 6"},
+{cat:"emergency",cb:"#fee2e2",ct:"#7f1d1d",q:"What is a Pan-Pan call?",a:"International urgency signal (×3) — serious but not immediately life-threatening. Examples: partial engine failure, navigation failure, fuel concern. Monitor — it may escalate to Mayday.",ref:"ICAO Annex 10"},
+{cat:"norfolk",cb:"#d1fae5",ct:"#064e3b",q:"What is the ICAO code for Norfolk Island Airport?",a:"YSNF. Y = Australia, S = NSW/Qld/ACT/Norfolk Island region, NF = Norfolk. Used in flight plans, NOTAMs, AIP references, and NAIPS.",ref:"AIP AD YSNF"},
+{cat:"norfolk",cb:"#d1fae5",ct:"#064e3b",q:"What are the runway dimensions at YSNF?",a:"Runway 11/29: 1,951m long × 45m wide, asphalt surface. Single runway — when closed, the aerodrome is closed.",ref:"AIP AD YSNF"},
+{cat:"norfolk",cb:"#d1fae5",ct:"#064e3b",q:"What is the elevation of YSNF?",a:"371 feet (113m) AMSL.",ref:"AIP AD YSNF"},
+{cat:"norfolk",cb:"#d1fae5",ct:"#064e3b",q:"What is the UTC offset for Norfolk Island Standard Time?",a:"UTC+11:30. Daylight Time (summer) is UTC+12:30. Norfolk Island does NOT observe Australian Eastern Daylight Time.",ref:"Module 7"},
+{cat:"norfolk",cb:"#d1fae5",ct:"#064e3b",q:"What is the primary weather hazard unique to YSNF?",a:"Sea fog — can close the aerodrome in under 5 minutes, typically arriving from the east. If dewpoint spread is less than 2°C at dawn, have a fog plan ready.",ref:"Module 7"},
+{cat:"norfolk",cb:"#d1fae5",ct:"#064e3b",q:"When does whale migration season occur around Norfolk Island?",a:"June to October. Humpback Whales attract elevated seabird activity near the coastline and aerodrome.",ref:"Module 7"},
+{cat:"norfolk",cb:"#d1fae5",ct:"#064e3b",q:"What is the highest-risk bird species for aircraft strikes at YSNF?",a:"The Masked Booby — large (1.5kg), slow to react to approaching aircraft. A single strike can penetrate a windscreen or cause engine damage on smaller aircraft.",ref:"Module 7 / AC 139-06"},
+{cat:"norfolk",cb:"#d1fae5",ct:"#064e3b",q:"What special precaution applies to the Norfolk Island Green Parrot?",a:"Critically endangered and protected under the EPBC Act. Do NOT use any dispersal method that could injure one. Contact Parks Australia ranger before any dispersal action.",ref:"EPBC Act 1999"},
+{cat:"norfolk",cb:"#d1fae5",ct:"#064e3b",q:"Why is fuel management especially important at YSNF?",a:"Fuel depends on periodic ship deliveries — no quick resupply. Monitor levels, know the threshold for notifying management, and accurately brief inbound aircraft on fuel availability.",ref:"Module 7"},
+{cat:"norfolk",cb:"#d1fae5",ct:"#064e3b",q:"What is a backtrack procedure?",a:"An aircraft taxies back along the runway (opposite to landing direction) to reach a threshold or exit. Required at YSNF as there is no parallel taxiway for the full runway length.",ref:"Module 7"},
+{cat:"norfolk",cb:"#d1fae5",ct:"#064e3b",q:"Which months see the highest sea fog risk at YSNF?",a:"June to August (winter) — cooler surface temperatures and relatively warmer ocean create conditions for rapid sea fog formation, particularly in early morning.",ref:"Module 7"},
+{cat:"security",cb:"#fce7f3",ct:"#500724",q:"What does ASIC stand for?",a:"Aviation Security Identification Card — required for unescorted access to security-controlled areas at certified aerodromes. Issued under the Aviation Transport Security Act 2004.",ref:"ATSA 2004"},
+{cat:"security",cb:"#fce7f3",ct:"#500724",q:"What do ASIC colours indicate?",a:"Red ASIC = access to airside (security-controlled areas). Orange ASIC = landside only. Most operational staff hold a red ASIC.",ref:"Aviation Transport Security Regulations 2005"},
+{cat:"security",cb:"#fce7f3",ct:"#500724",q:"How must an ASIC be displayed?",a:"Visibly above the waist with the photo facing outward, not covered by clothing or equipment. An ASIC in a pocket does not satisfy the requirement.",ref:"ATSA 2004"},
+{cat:"security",cb:"#fce7f3",ct:"#500724",q:"How long is an ASIC valid?",a:"Maximum two years. Must be renewed through AusCheck before expiry. An expired ASIC is not valid — you cannot work airside on an expired card.",ref:"ATSA 2004"},
+{cat:"security",cb:"#fce7f3",ct:"#500724",q:"What is the DAMP?",a:"Drug and Alcohol Management Plan — required under CASR Part 99 for employees performing Safety-Sensitive Aviation Activities. Covers random, pre-employment, post-incident, and return-to-duty testing.",ref:"CASR Part 99"},
+{cat:"security",cb:"#fce7f3",ct:"#500724",q:"What is the BAC limit for performing SSAAs?",a:"0.02% — significantly lower than the standard road limit of 0.05%. If at or above 0.02%, you must not perform any Safety-Sensitive Aviation Activity.",ref:"CASR Part 99 / CAO 82.0"},
+{cat:"security",cb:"#fce7f3",ct:"#500724",q:"What is a Safety-Sensitive Aviation Activity (SSAA)?",a:"Any activity that, if performed carelessly, could endanger life or aircraft safety. Includes runway inspections, operating vehicles on the movement area, supervising airside works, and providing aerodrome information to aircraft.",ref:"CASR Part 99"},
+{cat:"security",cb:"#fce7f3",ct:"#500724",q:"What security incidents must be reported?",a:"Unauthorised person airside, unattended bag airside, suspicious behaviour, damaged or breached perimeter, missing or stolen ASIC, any threat received, suspicious vehicle near the perimeter.",ref:"ATSA 2004"},
+{cat:"security",cb:"#fce7f3",ct:"#500724",q:"What is a refusal to submit to a drug/alcohol test treated as?",a:"The same as a positive test result under CASR Part 99. Remove from SSAAs immediately and initiate the DAMP management process.",ref:"CASR Part 99"},
+{cat:"security",cb:"#fce7f3",ct:"#500724",q:"What is AusCheck?",a:"The Australian Government background checking scheme used to verify ASIC applicants. Administered by the Department of Home Affairs. Applications at auscheck.ag.gov.au.",ref:"AusCheck Act 2007"},
+{cat:"glossary",cb:"#f1f0e8",ct:"#2c2c2a",q:"What is QNH?",a:"The altimeter setting that causes an altimeter to read the aerodrome elevation when on the ground. Published in METARs and required for all instrument approaches.",ref:"Glossary"},
+{cat:"glossary",cb:"#f1f0e8",ct:"#2c2c2a",q:"What are the four declared distances?",a:"TORA (Take-off Run Available), TODA (Take-off Distance Available), ASDA (Accelerate-Stop Distance Available), LDA (Landing Distance Available). Published in AIP AD for each runway direction.",ref:"ICAO Annex 14"},
+{cat:"glossary",cb:"#f1f0e8",ct:"#2c2c2a",q:"What does NOTAM stand for?",a:"Notice to Air Missions (formerly Notice to Airmen) — a notice containing information essential to personnel concerned with flight operations that cannot be published in advance.",ref:"AIP GEN 3.16"},
+{cat:"glossary",cb:"#f1f0e8",ct:"#2c2c2a",q:"What is the movement area?",a:"The runways, taxiways, and aprons of an aerodrome used for aircraft surface movement. Access requires FOO authorisation and an airside vehicle permit.",ref:"MOS Part 139"},
+{cat:"glossary",cb:"#f1f0e8",ct:"#2c2c2a",q:"What is the difference between an ARO and WSO?",a:"ARO (Aerodrome Reporting Officer) — qualified to conduct movement area inspections and report conditions. WSO (Works Safety Officer) — qualified to plan and supervise works on or near the movement area.",ref:"MOS Part 139"},
+{cat:"glossary",cb:"#f1f0e8",ct:"#2c2c2a",q:"What is a SIGMET?",a:"Significant Meteorological Information — weather advisory concerning conditions dangerous to aircraft: severe turbulence, severe icing, volcanic ash, tropical cyclones.",ref:"AIP Australia"},
+{cat:"glossary",cb:"#f1f0e8",ct:"#2c2c2a",q:"What is a GPU?",a:"Ground Power Unit — a portable electrical power source used to supply power to an aircraft on the ground without running engines or the APU (Auxiliary Power Unit).",ref:"Glossary"},
+{cat:"glossary",cb:"#f1f0e8",ct:"#2c2c2a",q:"What is the difference between TORA and TODA?",a:"TORA = take-off run available (runway length for ground roll only). TODA = take-off distance available (TORA plus any clearway). TODA is always greater than or equal to TORA.",ref:"ICAO Annex 14"},
+{cat:"glossary",cb:"#f1f0e8",ct:"#2c2c2a",q:"What is a displaced threshold?",a:"A threshold located at a point other than the physical beginning of the runway. The area before it may be used for taxiing and take-off roll-out but NOT for landing. Reduces the LDA.",ref:"ICAO Annex 14"},
+{cat:"glossary",cb:"#f1f0e8",ct:"#2c2c2a",q:"What is an SMS?",a:"Safety Management System — a systematic approach to managing safety including policies, procedures, and accountability. Your inspection records and incident reports are part of the SMS.",ref:"ICAO Annex 19"},
+{cat:"glossary",cb:"#f1f0e8",ct:"#2c2c2a",q:"What is ARFF?",a:"Aviation Rescue and Fire Fighting — the fire service at airports. Provided by Airservices Australia at major airports. At YSNF provided through a standing arrangement with the Norfolk Island Fire Service.",ref:"MOS Part 139 Ch.9"},
+{cat:"glossary",cb:"#f1f0e8",ct:"#2c2c2a",q:"What is a runway incursion?",a:"Any unauthorised intrusion onto a runway by an aircraft, vehicle, or person — regardless of whether an aircraft is using it. All runway incursions are serious incidents reportable to both ATSB and CASA.",ref:"ICAO Doc 9870"},
+{cat:"glossary",cb:"#f1f0e8",ct:"#2c2c2a",q:"What is PALS?",a:"Pilot Activated Lighting System — allows pilots to activate aerodrome lighting by keying the microphone on the CTAF. Enables operations when no FOO is on duty. Confirm active at end of each shift.",ref:"AIP Australia"},
+{cat:"glossary",cb:"#f1f0e8",ct:"#2c2c2a",q:"What is the WHMP?",a:"Wildlife Hazard Management Plan — documents wildlife species present, their risk level, approved dispersal methods, recording requirements, and habitat management strategies.",ref:"AC 139-06"},
+{cat:"glossary",cb:"#f1f0e8",ct:"#2c2c2a",q:"What is the AEP?",a:"Airport Emergency Plan — describes how the aerodrome responds to emergencies. Must be developed, maintained, and exercised regularly. The FOO must be familiar with it before their first shift.",ref:"MOS Part 139 Ch.8"},
+{cat:"glossary",cb:"#f1f0e8",ct:"#2c2c2a",q:"What is a MEDEVAC?",a:"Medical Evacuation — urgent transport of a seriously ill or injured patient by aircraft. Regular non-routine operation at YSNF given the island's isolation. Can occur at any time including overnight.",ref:"Module 6"},
+{cat:"glossary",cb:"#f1f0e8",ct:"#2c2c2a",q:"What is the Chicago Convention?",a:"The Convention on International Civil Aviation, signed in 1944 — created the international framework for civil aviation, established ICAO, and committed member states to common safety standards.",ref:"Chicago Convention 1944"}
+,
+{cat:"markings",cb:"#fef9c3",ct:"#713f12",q:"What is the purpose of runway threshold markings?",a:"A series of white stripes at the landing threshold indicating where the landing area begins. At YSNF with a 45m wide runway, there are 12 stripes arranged symmetrically about the centreline.",ref:"MOS Part 139 s3.1"},
+{cat:"markings",cb:"#fef9c3",ct:"#713f12",q:"How many threshold stripes does a 45m wide runway have?",a:"12 stripes. The number increases with runway width: 18m has 4, 23m has 6, 30m has 8, 45m has 12, 60m has 16.",ref:"MOS Part 139 s3.1"},
+{cat:"markings",cb:"#fef9c3",ct:"#713f12",q:"Where are aiming point markings located and what is their purpose?",a:"Two large rectangular white markings 300m from each threshold on runways 1,200m or longer. They provide pilots with a visual aiming point for the landing flare.",ref:"MOS Part 139 s3.1"},
+{cat:"markings",cb:"#fef9c3",ct:"#713f12",q:"What do touchdown zone markings look like and where are they located?",a:"Symmetrical white rectangular bars either side of the centreline within the first 900m from each threshold. They provide pilots with distance reference during the landing roll.",ref:"ICAO Annex 14"},
+{cat:"markings",cb:"#fef9c3",ct:"#713f12",q:"What colour are all taxiway markings and why?",a:"Yellow — to clearly distinguish them from white runway markings. Yellow is used for all taxiway markings: centreline, edge lines, and hold short markings.",ref:"MOS Part 139 s3.1"},
+{cat:"markings",cb:"#fef9c3",ct:"#713f12",q:"What does a runway hold short marking look like?",a:"Two solid yellow lines and two dashed yellow lines crossing the full width of the taxiway. The solid lines face the runway — you must not cross them without authorisation.",ref:"MOS Part 139 s3.1"},
+{cat:"markings",cb:"#fef9c3",ct:"#713f12",q:"Why is a faded hold short marking treated as an urgent defect?",a:"It is the last physical barrier before a runway incursion. A driver who cannot clearly see the marking may inadvertently cross onto the active runway.",ref:"Module 3"},
+{cat:"markings",cb:"#fef9c3",ct:"#713f12",q:"What are the four marking condition classifications?",a:"Good — clearly visible, no action. Fair — visible but faded, schedule repainting. Poor — difficult to see, report as significant defect. Unserviceable — not visible or misleading, report as hazard.",ref:"Module 3"},
+{cat:"markings",cb:"#fef9c3",ct:"#713f12",q:"What causes accelerated marking deterioration at YSNF?",a:"The combination of high UV exposure, salt air corrosion, and rubber contamination from landing aircraft. Markings at YSNF degrade faster than at most inland aerodromes.",ref:"Module 3"},
+{cat:"markings",cb:"#fef9c3",ct:"#713f12",q:"What marking indicates a displaced threshold?",a:"White arrows along the centreline pointing toward the displaced threshold, plus a white bar at the actual threshold. The area before the displaced threshold cannot be used for landing.",ref:"MOS Part 139 s3.1.8"},
+{cat:"signs",cb:"#fde68a",ct:"#78350f",q:"What are the two main categories of aerodrome signs?",a:"Mandatory instruction signs (red background, white text — require an action) and information signs (yellow background, black text or black background, yellow text — provide location or direction information).",ref:"MOS Part 139 s3.3"},
+{cat:"signs",cb:"#fde68a",ct:"#78350f",q:"What does a red sign with white text mean at an aerodrome?",a:"Mandatory instruction sign — it requires a specific action such as stopping before a runway. Examples: runway designation signs, hold position signs, no entry signs.",ref:"ICAO Annex 14"},
+{cat:"signs",cb:"#fde68a",ct:"#78350f",q:"What does a sign showing 11-29 on a red background mean?",a:"Runway designation sign — you are about to enter runway 11/29. Stop, check the runway is clear, broadcast your intentions, confirm no conflicting traffic, then enter.",ref:"MOS Part 139 s3.3"},
+{cat:"signs",cb:"#fde68a",ct:"#78350f",q:"What does a black sign with yellow letter A mean?",a:"Location sign — you are currently on Taxiway Alpha. Black background with yellow text always indicates a location sign.",ref:"ICAO Annex 14"},
+{cat:"signs",cb:"#fde68a",ct:"#78350f",q:"What does a yellow sign with black text and an arrow mean?",a:"Direction sign — indicating the direction to a taxiway or runway. Example: RWY 11 with a right arrow means runway 11 threshold is to the right.",ref:"ICAO Annex 14"},
+{cat:"signs",cb:"#fde68a",ct:"#78350f",q:"What does a black sign showing the number 9 indicate on a runway?",a:"Distance remaining sign — 900 metres of runway ahead. Posted at intervals along the runway to assist pilots during the landing roll and rejected take-off.",ref:"ICAO Annex 14"},
+{cat:"signs",cb:"#fde68a",ct:"#78350f",q:"What action do you take if a mandatory instruction sign is found unilluminated at night?",a:"Report as a significant defect immediately. Issue a NOTAM if it affects safety of night operations. Arrange urgent repair. An unlit runway designation or hold position sign at night is a genuine hazard.",ref:"Module 3"},
+{cat:"signs",cb:"#fde68a",ct:"#78350f",q:"Which takes precedence if there appears to be a conflict between a sign and a marking?",a:"Mandatory instruction signs always take precedence over information signs. In any ambiguous situation, stop and clarify by radio before proceeding.",ref:"Module 3"},
+{cat:"driving",cb:"#d1fae5",ct:"#065f46",q:"What unit of competency covers airside driving?",a:"AVIC0001 — Drive on the airside. One of the eight units making up the AVISS00053 Aerodrome Reporting Officer Skill Set.",ref:"AVISS00053"},
+{cat:"driving",cb:"#d1fae5",ct:"#065f46",q:"What safety equipment must all airside vehicles have?",a:"Amber flashing beacon visible from all sides, radio operational and tuned to CTAF, hi-vis markings, serviceable brakes tyres and lights, and no loose items that could become FOD.",ref:"MOS Part 139"},
+{cat:"driving",cb:"#d1fae5",ct:"#065f46",q:"What is the typical maximum speed on a runway for inspection vehicles?",a:"25 km/h. On the apron near aircraft the limit typically reduces to 15 km/h. Always refer to the aerodrome manual for YSNF — the manual is the authoritative source.",ref:"Aerodrome manual"},
+{cat:"driving",cb:"#d1fae5",ct:"#065f46",q:"What broadcast do you make before entering the runway?",a:"All stations Norfolk, [vehicle callsign], runway inspection, entering runway [number] at [time]. Then pause and listen before physically entering.",ref:"Module 3"},
+{cat:"driving",cb:"#d1fae5",ct:"#065f46",q:"What do you do if your radio fails while you are on the runway?",a:"Move clear of the runway immediately. Use a handheld backup radio if available. If no backup, use your mobile phone to call the operations room. Never remain on an active runway without a functioning radio.",ref:"Module 3"},
+{cat:"driving",cb:"#d1fae5",ct:"#065f46",q:"What does an airside vehicle permit confirm?",a:"That the specific vehicle has been inspected and found suitable for airside use, has required safety equipment, and the named driver is authorised. It is vehicle-specific — a permit for one vehicle does not cover another.",ref:"MOS Part 139"},
+{cat:"driving",cb:"#d1fae5",ct:"#065f46",q:"What are the three checks before crossing a hold short line onto a runway?",a:"Stop at the hold short line. Look both ways visually — is the runway clear? Check the radio — has any aircraft called inbound? Broadcast your entry. Then and only then enter.",ref:"Module 3"},
+{cat:"driving",cb:"#d1fae5",ct:"#065f46",q:"Why must you never position a vehicle directly behind a running jet engine?",a:"Jet blast from a running engine can push or overturn a vehicle. On an ATR 72, prop wash during power-up is strong enough to affect a light inspection vehicle positioned behind it.",ref:"Module 3"},
+{cat:"driving",cb:"#d1fae5",ct:"#065f46",q:"When escorting an unfamiliar vehicle airside, where do you position your vehicle?",a:"In front — you lead at all times. The escorted vehicle follows directly behind. Never let the escorted vehicle enter a runway or active taxiway independently.",ref:"Module 3"},
+{cat:"driving",cb:"#d1fae5",ct:"#065f46",q:"What pre-operational checks must be completed before any vehicle enters the movement area?",a:"Tyres, fuel, all lights including amber beacon, radio operational with volume sufficient to hear over engine noise, hi-vis vest on, inspection forms and FOD bag present, permit displayed and current.",ref:"Module 3"},
+{cat:"sa",cb:"#ede9fe",ct:"#4c1d95",q:"What unit of competency covers situational awareness?",a:"AVIZ0003 — Maintain basic situational awareness in an aviation workplace. One of the eight units in the AVISS00053 ARO Skill Set.",ref:"AVISS00053"},
+{cat:"sa",cb:"#ede9fe",ct:"#4c1d95",q:"What are the three levels of situational awareness?",a:"Level 1 Perception — what can you currently detect. Level 2 Comprehension — what does it mean. Level 3 Projection — what is likely to happen next. Most incidents occur at Levels 2 or 3.",ref:"AVIZ0003"},
+{cat:"sa",cb:"#ede9fe",ct:"#4c1d95",q:"What is task saturation and how does it affect an FOO?",a:"When too many simultaneous demands compete for attention, causing focus on the most immediate task while losing awareness of the broader picture. Classic example: managing a fuel spill while an aircraft is inbound.",ref:"Module 3"},
+{cat:"sa",cb:"#ede9fe",ct:"#4c1d95",q:"What is expectation bias and why is it dangerous in aerodrome operations?",a:"Seeing what you expect rather than what is actually there. An ARO expecting a clear runway may not register a piece of FOD. Guard against it by actively challenging assumptions during every inspection.",ref:"Module 3"},
+{cat:"sa",cb:"#ede9fe",ct:"#4c1d95",q:"What is the threat and error management (TEM) model?",a:"Three countermeasures: Avoid (recognise threats before they become errors), Trap (catch errors before they create undesired states), and Mitigate (recover from undesired states before they become incidents).",ref:"AVIZ0003"},
+{cat:"sa",cb:"#ede9fe",ct:"#4c1d95",q:"What is fixation and how do you guard against it in the movement area?",a:"Focusing intensely on one element while losing awareness of everything else. Guard against it by scanning broadly before focusing narrowly, and always confirming traffic status before stopping on a runway.",ref:"Module 3"},
+{cat:"sa",cb:"#ede9fe",ct:"#4c1d95",q:"What does closed-loop communication mean?",a:"Sender transmits, receiver reads back, sender confirms the readback. If a readback is not received, communication is not complete. Applies to radio calls, in-person briefings, and written handovers.",ref:"AVIZ0003"},
+{cat:"sa",cb:"#ede9fe",ct:"#4c1d95",q:"How many hours without sleep produces impairment equivalent to 0.05% BAC?",a:"17 to 19 hours. Fatigue directly impairs all three levels of situational awareness. A fatigued FOO must not perform Safety-Sensitive Aviation Activities.",ref:"AVIZ0003"},
+{cat:"sa",cb:"#ede9fe",ct:"#4c1d95",q:"What is the authority gradient and why does it matter for an FOO?",a:"The tendency for junior staff to defer to more senior people even when they can see an error occurring. FOOs must develop assertiveness to speak up when something is wrong regardless of who is present.",ref:"AVIZ0003"},
+{cat:"sa",cb:"#ede9fe",ct:"#4c1d95",q:"What is the FOO scan cycle during active operations?",a:"Every 2-3 minutes: check CTAF, visual scan of movement area, check weather. Every 15-20 minutes: review NOTAMs, confirm next movement, check contractors. After every movement: document, pilot report, runway status.",ref:"Module 3"},
+{cat:"sms",cb:"#fce7f3",ct:"#9d174d",q:"What are the four components of an SMS?",a:"Safety policy (commitment and accountability), safety risk management (identify hazards and controls), safety assurance (monitor whether controls work), and safety promotion (training, communication, culture).",ref:"ICAO Annex 19"},
+{cat:"sms",cb:"#fce7f3",ct:"#9d174d",q:"What is at the top of the safety hierarchy?",a:"Elimination — removing the hazard entirely. Then substitution, engineering controls, administrative controls, and finally PPE and behaviour (least effective). Most aerodrome controls are administrative.",ref:"WHS Act 2011"},
+{cat:"sms",cb:"#fce7f3",ct:"#9d174d",q:"What is a just culture in aviation SMS?",a:"An environment where people report errors and near-misses without fear of punishment. Honest reporting is encouraged and protected. Reckless or deliberate violations still attract consequences.",ref:"ICAO Annex 19"},
+{cat:"sms",cb:"#fce7f3",ct:"#9d174d",q:"Why are near-misses as important as incidents in an SMS?",a:"A near-miss is a warning that the system is not working as intended. Investigating it before an incident occurs is far more valuable than investigating after. Near-misses reveal latent hazards.",ref:"Module 3"},
+{cat:"sms",cb:"#fce7f3",ct:"#9d174d",q:"What is ASIR and when do you use it?",a:"Aviation Safety Incident Report — the online reporting system at avsr.gov.au for reporting aviation hazards and incidents to CASA. Use it for incidents and hazards that go beyond your internal aerodrome reporting.",ref:"CASA"},
+{cat:"sms",cb:"#fce7f3",ct:"#9d174d",q:"How frequently does CASA recommend AROs refresh their qualifications?",a:"Every two to five years per CASA AC 139-13. Complex high-traffic aerodromes every two years. Simple regional aerodromes up to five years. YSNF is a certified aerodrome — every three years is appropriate.",ref:"CASA AC 139-13"},
+{cat:"sms",cb:"#fce7f3",ct:"#9d174d",q:"What types of changes at an aerodrome require formal safety assessment?",a:"New infrastructure, runway resurfacing, changes to operating hours, new aircraft types, changes to emergency services arrangements, new fuel supplier, and changes to staffing or qualifications.",ref:"ICAO Annex 19"},
+{cat:"sms",cb:"#fce7f3",ct:"#9d174d",q:"Why are administrative controls considered a risk in aerodrome SMS?",a:"They are fourth in the hierarchy and depend entirely on individuals following them correctly every time. If a person is fatigued, distracted, or complacent, the control fails. Engineering controls are inherently more reliable.",ref:"Module 3"},
+{cat:"ols",cb:"#dbeafe",ct:"#1e3a8a",q:"What is the approach surface slope at a code 4C aerodrome like YSNF?",a:"2% — 1 metre of height clearance for every 50 metres from the threshold. Formula: maximum permitted height = distance from threshold in metres multiplied by 0.02.",ref:"MOS Part 139 Ch.6"},
+{cat:"ols",cb:"#dbeafe",ct:"#1e3a8a",q:"A crane is 200m from the runway 11 threshold. What is its maximum permitted height?",a:"200 multiplied by 0.02 equals 4.0m AGL. If the crane extends above 4.0m at that position, it penetrates the approach surface and a NOTAM is required.",ref:"MOS Part 139 Ch.6"},
+{cat:"ols",cb:"#dbeafe",ct:"#1e3a8a",q:"What is the transitional surface slope?",a:"14.3% — that is 1:7. It is the steepest OLS surface. Objects immediately beside the runway strip can penetrate the transitional surface at a relatively low height.",ref:"ICAO Annex 14"},
+{cat:"ols",cb:"#dbeafe",ct:"#1e3a8a",q:"When assessing OLS penetration for a crane, do you use the stowed or extended height?",a:"Always the maximum extended height at the working position. A crane stowed at 3m but extending to 12m must be assessed at 12m. Stowed height is irrelevant to the OLS assessment.",ref:"Module 4"},
+{cat:"ols",cb:"#dbeafe",ct:"#1e3a8a",q:"What is LDA and how does a displaced threshold affect it?",a:"Landing Distance Available — the runway length available for landing aircraft. A displaced threshold reduces the LDA. LDA equals TORA minus the displacement distance.",ref:"ICAO Annex 14"},
+{cat:"ols",cb:"#dbeafe",ct:"#1e3a8a",q:"What are the four declared distances?",a:"TORA Take-off Run Available, TODA Take-off Distance Available which is TORA plus any clearway, ASDA Accelerate-Stop Distance Available which is TORA plus stopway, and LDA Landing Distance Available.",ref:"ICAO Annex 14"},
+{cat:"ols",cb:"#dbeafe",ct:"#1e3a8a",q:"If a 200m threshold displacement is applied to YSNF runway 11 (TORA 1951m), what is the new LDA?",a:"LDA equals 1,951 minus 200 equals 1,751m. This must be filed in a NOTAM and advised to the airline so pilots can recalculate landing performance before arrival.",ref:"Module 4"},
+{cat:"ols",cb:"#dbeafe",ct:"#1e3a8a",q:"What is the inner edge width of the approach surface at a code 4 aerodrome?",a:"300m wide at the threshold, diverging at 15% each side as it extends outward. At 1,000m from the threshold, the surface width is 300 plus 2 times 150 equals 600m.",ref:"ICAO Annex 14"},
+{cat:"ols",cb:"#dbeafe",ct:"#1e3a8a",q:"What three actions are required when works equipment penetrates the OLS?",a:"Issue a NOTAM immediately. Assess whether operations can safely continue during the penetration. If instrument approaches are affected, notify Airservices Australia.",ref:"MOS Part 139 Ch.6"}
+];
+
+let deck=[],idx=0,known=new Set(),again=new Set(),flipped=false;
+function catLabel(c){return{fundamentals:'Module 1',daily:'Module 2',aro:'Module 3',markings:'3 — Markings',signs:'3 — Signs',driving:'3 — Driving',sa:'3 — Sit. awareness',sms:'3 — SMS',wso:'Module 4',ols:'4 — OLS',radio:'Module 5',emergency:'Module 6',norfolk:'Module 7',security:'Module 8',glossary:'Glossary'}[c]||c;}
+function filterCat(){
+  const v=document.getElementById('cat-select').value;
+  deck=v==='all'?[...CARDS]:CARDS.filter(c=>c.cat===v);
+  known=new Set();again=new Set();idx=0;flipped=false;
+  document.getElementById('complete').style.display='none';
+  document.getElementById('card-area').style.display='block';
+  document.getElementById('feedback').style.display='flex';
+  document.getElementById('nav').style.display='flex';
+  render();
+}
+function render(){
+  if(idx>=deck.length){showComplete();return;}
+  const c=deck[idx];
+  document.getElementById('card').classList.remove('flipped');
+  flipped=false;
+  ['cat-badge','cat-badge-b'].forEach(id=>{
+    const el=document.getElementById(id);
+    el.textContent=catLabel(c.cat);
+    el.style.background=c.cb;
+    el.style.color=c.ct;
+  });
+  document.getElementById('front-q').textContent=c.q;
+  document.getElementById('back-a').textContent=c.a;
+  document.getElementById('back-ref').textContent=c.ref||'';
+  const pct=Math.round(idx/deck.length*100);
+  document.getElementById('prog-fill').style.width=pct+'%';
+  document.getElementById('prog-label').textContent='Card '+(idx+1)+' of '+deck.length;
+  document.getElementById('score-label').textContent='Known: '+known.size+' \u00B7 Review: '+again.size;
+  document.getElementById('btn-prev').disabled=idx===0;
+  document.getElementById('btn-next').disabled=idx>=deck.length-1;
+  document.getElementById('card-num').textContent=(idx+1)+' / '+deck.length;
+}
+function flip(){flipped=!flipped;document.getElementById('card').classList.toggle('flipped',flipped);}
+function markKnow(){known.add(idx);again.delete(idx);next();}
+function markAgain(){again.add(idx);known.delete(idx);next();}
+function next(){if(idx<deck.length-1){idx++;render();}}
+function prev(){if(idx>0){idx--;flipped=false;document.getElementById('card').classList.remove('flipped');render();}}
+function shuffle(){
+  for(let i=deck.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[deck[i],deck[j]]=[deck[j],deck[i]];}
+  known=new Set();again=new Set();idx=0;
+  document.getElementById('complete').style.display='none';
+  document.getElementById('card-area').style.display='block';
+  document.getElementById('feedback').style.display='flex';
+  document.getElementById('nav').style.display='flex';
+  render();
+}
+function restart(){filterCat();}
+function reviewOnly(){
+  if(again.size===0){alert('No cards marked for review.');return;}
+  deck=Array.from(again).map(i=>deck[i]);
+  known=new Set();again=new Set();idx=0;
+  document.getElementById('complete').style.display='none';
+  document.getElementById('card-area').style.display='block';
+  document.getElementById('feedback').style.display='flex';
+  document.getElementById('nav').style.display='flex';
+  render();
+}
+function showComplete(){
+  document.getElementById('card-area').style.display='none';
+  document.getElementById('feedback').style.display='none';
+  document.getElementById('nav').style.display='none';
+  document.getElementById('complete').style.display='block';
+  const pct=Math.round(known.size/deck.length*100);
+  document.getElementById('complete-msg').textContent='You got '+known.size+' of '+deck.length+' cards correct ('+pct+'%). '+(again.size>0?again.size+' card'+(again.size>1?'s':'')+' marked for review.':'All cards marked as known.');
+  document.getElementById('prog-fill').style.width='100%';
+  document.getElementById('prog-label').textContent='Complete — '+deck.length+' cards';
+  document.getElementById('score-label').textContent='Known: '+known.size+' · Review: '+again.size;
+}
+filterCat();
+</script>
+</body>
+</html>

@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>YSNF Airport Diagram — FlightOps Academy</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #f5f5f0; padding: 1rem; color: #1a1a1a; }
+  h1 { font-size: 16px; font-weight: 500; margin-bottom: 12px; color: #1a1a1a; }
+  #diagram-area { background: #c8dba8; border-radius: 12px; overflow: hidden; }
+  #airport-svg { display: block; width: 100%; }
+  .hot { cursor: pointer; transition: opacity .15s; }
+  .hot:hover { opacity: .75; }
+  #panel { background: white; border: 1px solid #e0e0d8; border-radius: 12px; padding: 1rem 1.25rem; margin-top: 12px; min-height: 80px; display: none; }
+  #panel-title { font-size: 15px; font-weight: 600; color: #1a1a1a; margin: 0 0 6px; }
+  #panel-body { font-size: 13px; color: #555; line-height: 1.6; margin: 0; white-space: pre-line; }
+  #panel-tags { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; }
+  .tag { font-size: 11px; font-weight: 600; padding: 3px 9px; border-radius: 20px; }
+  .tag-blue { background: #dbeafe; color: #1e40af; }
+  .tag-green { background: #dcfce7; color: #166534; }
+  .tag-amber { background: #fef3c7; color: #92400e; }
+  .tag-red { background: #fee2e2; color: #991b1b; }
+  #hint { font-size: 12px; color: #888; margin-top: 8px; text-align: center; }
+  p.credit { font-size: 11px; color: #aaa; margin-top: 8px; text-align: right; }
+</style>
+</head>
+<body>
+<h1>Norfolk Island Airport (YSNF) — interactive layout</h1>
+
+<div id="diagram-area">
+<svg id="airport-svg" viewBox="0 0 680 420" xmlns="http://www.w3.org/2000/svg">
+  <rect width="680" height="420" fill="#c8dba8"/>
+  <rect x="0" y="330" width="680" height="90" fill="#b8cfa0" opacity="0.6"/>
+  <rect x="0" y="0" width="680" height="60" fill="#b8cfa0" opacity="0.5"/>
+  <text x="20" y="22" font-size="11" font-weight="500" fill="#5a7a40" font-family="sans-serif">N</text>
+  <line x1="24" y1="26" x2="24" y2="44" stroke="#5a7a40" stroke-width="1.5"/>
+  <polygon points="24,26 20,36 24,32 28,36" fill="#5a7a40"/>
+  <text x="340" y="16" text-anchor="middle" font-size="11" font-weight="500" fill="#5a7a40" font-family="sans-serif">coast / terrain</text>
+  <text x="340" y="410" text-anchor="middle" font-size="11" font-weight="500" fill="#5a7a40" font-family="sans-serif">coast / terrain</text>
+  <rect x="52" y="188" width="576" height="44" rx="3" fill="#e8e0c8" class="hot" onclick="show('strip')"/>
+  <rect x="72" y="193" width="536" height="34" rx="2" fill="#d4c9a0" class="hot" onclick="show('runway')"/>
+  <line x1="72" y1="210" x2="608" y2="210" stroke="white" stroke-width="1" stroke-dasharray="18 12"/>
+  <rect x="72" y="193" width="18" height="34" fill="#3a7a3a" rx="1"/>
+  <rect x="590" y="193" width="18" height="34" fill="#e03030" rx="1"/>
+  <rect x="95" y="198" width="28" height="8" rx="1" fill="white" opacity="0.9"/>
+  <rect x="95" y="209" width="28" height="8" rx="1" fill="white" opacity="0.9"/>
+  <rect x="95" y="220" width="28" height="8" rx="1" fill="white" opacity="0.9"/>
+  <rect x="558" y="198" width="28" height="8" rx="1" fill="white" opacity="0.9"/>
+  <rect x="558" y="209" width="28" height="8" rx="1" fill="white" opacity="0.9"/>
+  <rect x="558" y="220" width="28" height="8" rx="1" fill="white" opacity="0.9"/>
+  <rect x="208" y="199" width="48" height="6" rx="1" fill="white" opacity="0.7"/>
+  <rect x="424" y="215" width="48" height="6" rx="1" fill="white" opacity="0.7"/>
+  <text x="85" y="215" text-anchor="middle" font-size="10" font-weight="700" fill="white" font-family="sans-serif">11</text>
+  <text x="596" y="215" text-anchor="middle" font-size="10" font-weight="700" fill="white" font-family="sans-serif">29</text>
+  <rect x="310" y="193" width="60" height="34" fill="#bfb888" class="hot" onclick="show('tdr')"/>
+  <rect x="422" y="193" width="16" height="34" fill="#ccc09a" class="hot" onclick="show('rubber')"/>
+  <rect x="220" y="230" width="16" height="60" rx="2" fill="#b8aa80" class="hot" onclick="show('twy')"/>
+  <rect x="220" y="290" width="240" height="16" rx="2" fill="#b8aa80" class="hot" onclick="show('twy')"/>
+  <rect x="440" y="290" width="120" height="80" rx="4" fill="#ccc4a8" class="hot" onclick="show('apron')"/>
+  <rect x="448" y="298" width="50" height="28" rx="2" fill="#aaa090" stroke="#8a8070" stroke-width="0.5"/>
+  <text x="473" y="316" text-anchor="middle" font-size="9" font-weight="500" fill="#4a4030" font-family="sans-serif">Bay 1</text>
+  <rect x="448" y="332" width="50" height="28" rx="2" fill="#aaa090" stroke="#8a8070" stroke-width="0.5"/>
+  <text x="473" y="350" text-anchor="middle" font-size="9" font-weight="500" fill="#4a4030" font-family="sans-serif">Bay 2</text>
+  <rect x="505" y="298" width="45" height="62" rx="2" fill="#9a9080" stroke="#7a7060" stroke-width="0.5"/>
+  <text x="527" y="333" text-anchor="middle" font-size="8" fill="#3a3020" font-family="sans-serif">GA</text>
+  <rect x="446" y="372" width="108" height="12" rx="2" fill="#8a7a5a" opacity="0.7"/>
+  <text x="500" y="382" text-anchor="middle" font-size="8" fill="#5a4a30" font-family="sans-serif">fuel</text>
+  <rect x="560" y="292" width="60" height="50" rx="3" fill="#d4c8a8" stroke="#b0a888" stroke-width="0.5" class="hot" onclick="show('terminal')"/>
+  <text x="590" y="321" text-anchor="middle" font-size="9" font-weight="500" fill="#5a5040" font-family="sans-serif">terminal</text>
+  <rect x="62" y="150" width="8" height="44" rx="1" fill="#f0c020" opacity="0.9" class="hot" onclick="show('papi')"/>
+  <rect x="62" y="222" width="8" height="10" rx="1" fill="#f04020" opacity="0.9"/>
+  <text x="56" y="178" text-anchor="end" font-size="9" fill="#8a7020" font-family="sans-serif">PAPI</text>
+  <text x="56" y="188" text-anchor="end" font-size="8" fill="#8a7020" font-family="sans-serif">RWY 11</text>
+  <rect x="612" y="226" width="8" height="44" rx="1" fill="#f04020" opacity="0.9" class="hot" onclick="show('papi')"/>
+  <rect x="612" y="226" width="8" height="20" rx="1" fill="#f0c020" opacity="0.9"/>
+  <text x="626" y="248" text-anchor="start" font-size="9" fill="#8a3010" font-family="sans-serif">PAPI</text>
+  <text x="626" y="258" text-anchor="start" font-size="8" fill="#8a3010" font-family="sans-serif">RWY 29</text>
+  <circle cx="52" cy="168" r="6" fill="none" stroke="#3366cc" stroke-width="1.5" class="hot" onclick="show('ols')"/>
+  <line x1="52" y1="156" x2="52" y2="180" stroke="#3366cc" stroke-width="1"/>
+  <line x1="40" y1="168" x2="64" y2="168" stroke="#3366cc" stroke-width="1"/>
+  <text x="42" y="148" text-anchor="middle" font-size="8" fill="#3366cc" font-family="sans-serif">OLS</text>
+  <line x1="52" y1="60" x2="52" y2="193" stroke="#3366cc" stroke-width="0.5" stroke-dasharray="4 4" opacity="0.6"/>
+  <line x1="628" y1="228" x2="628" y2="360" stroke="#3366cc" stroke-width="0.5" stroke-dasharray="4 4" opacity="0.6"/>
+  <circle cx="336" cy="80" r="7" fill="#f0c820" stroke="#c0a010" stroke-width="0.5" class="hot" onclick="show('beacon')"/>
+  <text x="350" y="84" font-size="9" fill="#a08010" font-family="sans-serif">beacon</text>
+  <rect x="140" y="100" width="70" height="40" rx="4" fill="#e8d8b0" stroke="#c0b090" stroke-width="0.5" class="hot" onclick="show('ops')"/>
+  <text x="175" y="118" text-anchor="middle" font-size="9" font-weight="500" fill="#5a4830" font-family="sans-serif">operations</text>
+  <text x="175" y="130" text-anchor="middle" font-size="8" fill="#7a6848" font-family="sans-serif">room</text>
+  <line x1="220" y1="230" x2="175" y2="140" stroke="#9a8868" stroke-width="0.5" stroke-dasharray="3 3" opacity="0.7"/>
+  <text x="340" y="210" text-anchor="middle" font-size="8" fill="#8a7850" font-family="sans-serif" opacity="0.8">runway 11 / 29 — 1,951m × 45m</text>
+  <g class="hot" onclick="show('wildlife')">
+    <circle cx="400" cy="155" r="5" fill="#5a9a30" opacity="0.8"/>
+    <circle cx="415" cy="148" r="4" fill="#5a9a30" opacity="0.7"/>
+    <circle cx="408" cy="162" r="3" fill="#5a9a30" opacity="0.6"/>
+    <text x="425" y="157" font-size="8" fill="#3a6a18" font-family="sans-serif">wildlife zone</text>
+  </g>
+</svg>
+</div>
+
+<p id="hint">Click any area of the airport to learn about it</p>
+
+<div id="panel">
+  <p id="panel-title"></p>
+  <p id="panel-body"></p>
+  <div id="panel-tags"></div>
+</div>
+
+<p class="credit">FlightOps Academy — YSNF reference diagram. Not for navigation.</p>
+
+<script>
+const data = {
+  runway:{title:'Runway 11/29',body:'The single sealed runway at YSNF runs roughly east–west. It is 1,951m long and 45m wide, asphalt surface. Runway 11 faces east (magnetic heading approx 110°) and Runway 29 faces west (approx 290°). With a single runway, when it is closed the aerodrome is closed.\n\nThe runway has a slight downslope from the 29 threshold to the 11 threshold. Terrain drops sharply beyond both thresholds — aircraft performance calculations must account for this.',tags:[['1,951m × 45m','blue'],['asphalt','green'],['code 4C','blue'],['elev 371ft AMSL','green']]},
+  strip:{title:'Runway strip',body:'The runway strip is the graded and cleared area extending 150m either side of the runway centreline and beyond each threshold. It must be kept clear of obstacles and inspected as part of every routine runway inspection.\n\nCheck for erosion into the strip, vegetation above strip level, and wildlife in the undershoot areas.',tags:[['150m width','blue'],['MOS Part 139','amber'],['inspect daily','green']]},
+  tdr:{title:'Touchdown zone',body:'The touchdown zone (TDZ) is the first 900m of runway from each threshold. It receives the highest stress of any runway area and accumulates rubber deposits over time.\n\nRubber build-up reduces friction and can cause aquaplaning in wet conditions. Inspect TDZ markings for visibility and check for rubber contamination regularly.',tags:[['first 900m','blue'],['rubber accumulation risk','amber'],['high wear area','amber']]},
+  rubber:{title:'Rubber accumulation zone',body:'Rubber deposits from landing aircraft accumulate primarily 200–500m from each threshold. Over time these reduce pavement friction, particularly when wet.\n\nWhen a smooth, dark, rubber-contaminated surface is visible, report to maintenance and consider a friction assessment. MOS Part 139 specifies minimum friction values.',tags:[['friction hazard','amber'],['schedule removal','amber'],['MOS 139 s4.13','blue']]},
+  twy:{title:'Taxiway Alpha',body:'The primary taxiway connection between the runway and the apron. Aircraft use Taxiway Alpha to vacate after landing. The remainder uses backtrack — aircraft taxi back along the runway to the opposite threshold.\n\nCheck for surface condition, yellow edge markings, hold-short markings at the runway intersection, and blue taxiway edge lights.',tags:[['blue edge lights','blue'],['hold-short markings','amber'],['inspect daily','green']]},
+  apron:{title:'Apron — bays 1, 2 and GA',body:'Bay 1 accommodates the RPT aircraft (ATR 72). Bay 2 serves charter and GA. Fuel storage is at the southern apron edge — maintain 15m no-smoking zone during refuelling.\n\nThe apron is exposed to prevailing winds — jet blast and prop wash from ATR 72 engines can affect personnel and unsecured equipment. No vehicle enters the aircraft safety zone without ground handler supervision.',tags:[['Bay 1 — RPT','blue'],['Bay 2 — charter','green'],['fuel storage south edge','amber']]},
+  terminal:{title:'Terminal building',body:'The terminal is on the landside/airside boundary. All access points must be controlled — doors and gates locked when not in active use.\n\nBiosecurity inspections for arriving passengers from Australia occur in the terminal. Coordinate with biosecurity officers to ensure turnaround sequence allows sufficient inspection time.',tags:[['ASIC boundary','blue'],['biosecurity point','amber'],['access controlled','green']]},
+  papi:{title:'PAPI — Precision Approach Path Indicator',body:'PAPIs at both thresholds provide visual glidepath guidance at 3.0°.\n\n4 white = too high\n3 white 1 red = slightly high\n2 white 2 red = ON GLIDEPATH\n1 white 3 red = slightly low\n4 red = dangerously low\n\nCheck PAPIs on every opening inspection — drive the approach and confirm 2 red / 2 white from the approach direction. A misaligned PAPI must be taken out of service immediately and a NOTAM issued.',tags:[['3.0° glidepath','blue'],['check every opening','amber'],['NOTAM if U/S','red']]},
+  beacon:{title:'Aerodrome beacon',body:'The rotating beacon alternates white and green — the standard signal for a civil land aerodrome. It operates from dusk to dawn or when visibility is reduced.\n\nCheck that the beacon is rotating and both colours are visible during low-light opening inspections. If unserviceable during reduced visibility, a NOTAM is required.',tags:[['white/green = civil','blue'],['dusk to dawn','green'],['NOTAM if U/S in low vis','amber']]},
+  ops:{title:'Operations room',body:'Your base of operations during every shift. Must contain the current aerodrome manual, Airport Emergency Plan, contact lists, access to NAIPS, weather services, and all inspection forms.\n\nComplete all desk checks — weather, NOTAMs, traffic schedule — before going outside. This is also the emergency coordination point during a declared emergency.',tags:[['aerodrome manual here','blue'],['NAIPS access','green'],['emergency coordination point','red']]},
+  ols:{title:'Obstacle Limitation Surfaces (OLS)',body:'The OLS is the three-dimensional protected airspace around the aerodrome within which obstacles must not penetrate. Any crane, vehicle, or structure that would penetrate the OLS requires a NOTAM and may require a runway closure.\n\nAs WSO, calculate the maximum height of works equipment at its working position and check against OLS diagrams in the aerodrome manual before authorising.',tags:[['approach surface','blue'],['WSO responsibility','amber'],['NOTAM if penetrated','red']]},
+  wildlife:{title:'Wildlife hazard zones',body:'Areas beyond the runway thresholds and along the runway strip are the primary wildlife hazard zones. Birds congregate here to feed in the early morning.\n\nKey species: Masked Booby (large, slow to react — high strike risk), White Tern, Black Noddy, Red-tailed Tropicbird. The Norfolk Island Green Parrot is critically endangered — do not use dispersal methods that could injure one.\n\nWildlife activity is elevated June–October during whale migration season.',tags:[['Masked Booby — high risk','red'],['Green Parrot — protected','amber'],['worst: early morning','amber']]}
+};
+function show(k){
+  const d=data[k]; if(!d) return;
+  document.getElementById('panel').style.display='block';
+  document.getElementById('hint').style.display='none';
+  document.getElementById('panel-title').textContent=d.title;
+  document.getElementById('panel-body').textContent=d.body;
+  document.getElementById('panel-tags').innerHTML=d.tags.map(([t,c])=>`<span class="tag tag-${c}">${t}</span>`).join('');
+}
+</script>
+</body>
+</html>
