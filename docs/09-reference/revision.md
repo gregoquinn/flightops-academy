@@ -14,7 +14,7 @@ Click any link below to open the tool in a new tab.
 | [Airport diagram — YSNF](https://gregoquinn.github.io/flightops-academy/docs/interactive/airport-diagram.html) | Clickable airport map — click any zone to learn about it |
 | [Scenario simulator](https://gregoquinn.github.io/flightops-academy/docs/interactive/scenario-simulator.html) | AI-assessed operational scenarios — type your response and get instant feedback |
 | [AI study tutor](https://gregoquinn.github.io/flightops-academy/docs/interactive/study-tutor.html) | Ask anything, get quizzed, or explore any topic with an AI tutor |
-
+| [Progress tracker](https://gregoquinn.github.io/flightops-academy/docs/interactive/progress-tracker.html) | Track your study progress across all modules and AVISS00053 units |
 ---
 
 ## Scenario exercises
