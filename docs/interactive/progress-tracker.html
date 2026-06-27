@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>FlightOps Academy — Progress Tracker</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#f5f5f0;padding:1rem;color:#1a1a1a;max-width:720px;margin:0 auto}
+h1{font-size:15px;font-weight:500;margin-bottom:14px}
+#summary-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:10px;margin-bottom:16px}
+.stat{background:#fff;border:1px solid #e0dfda;border-radius:10px;padding:12px 14px}
+.stat-label{font-size:11px;color:#888;margin-bottom:4px}
+.stat-val{font-size:22px;font-weight:500;color:#1a1a1a}
+.stat-sub{font-size:11px;color:#aaa;margin-top:2px}
+#overall-bar{height:6px;background:#e0dfda;border-radius:6px;overflow:hidden;margin-bottom:16px}
+#overall-fill{height:100%;background:#16a34a;border-radius:6px;transition:width .4s}
+.section{margin-bottom:10px;background:#fff;border:1px solid #e0dfda;border-radius:12px;overflow:hidden}
+.section-header{display:flex;align-items:center;gap:10px;padding:12px 16px;cursor:pointer;user-select:none}
+.section-header:hover{background:#f8f7f2}
+.sec-icon{width:32px;height:32px;border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:600;flex-shrink:0}
+.sec-title{flex:1;font-size:13px;font-weight:500;color:#1a1a1a}
+.sec-meta{font-size:11px;color:#aaa}
+.sec-chevron{font-size:13px;color:#aaa;transition:transform .2s;display:inline-block}
+.sec-chevron.open{transform:rotate(180deg)}
+.sec-bar{height:3px;background:#e0dfda}
+.sec-fill{height:100%;transition:width .3s}
+.items{display:none;padding:4px 0 10px}
+.items.open{display:block}
+.item{display:flex;align-items:flex-start;gap:12px;padding:8px 16px;cursor:pointer}
+.item:hover{background:#f8f7f2}
+.cb{width:18px;height:18px;border-radius:4px;border:1.5px solid #ccc;flex-shrink:0;margin-top:2px;display:flex;align-items:center;justify-content:center;transition:all .15s}
+.cb.checked{background:#16a34a;border-color:#16a34a}
+.cb.checked::after{content:'✓';font-size:11px;color:white;font-weight:600}
+.item-body{flex:1}
+.item-title{font-size:13px;color:#1a1a1a;line-height:1.4}
+.item-sub{font-size:11px;color:#888;margin-top:2px}
+.unit-badge{display:inline-block;font-size:10px;font-weight:600;padding:1px 7px;border-radius:20px;background:#dbeafe;color:#1e40af;margin-top:3px}
+#actions{display:flex;gap:8px;margin-top:8px;align-items:center;flex-wrap:wrap}
+#btn-reset{font-size:12px;padding:5px 12px;border-radius:8px;border:1px solid #ccc;background:#f8f7f2;color:#555;cursor:pointer}
+#btn-reset:hover{background:#f0efe8;color:#1a1a1a}
+#saved-msg{font-size:11px;color:#16a34a;display:none}
+p.credit{font-size:11px;color:#aaa;text-align:right;margin-top:10px}
+</style>
+</head>
+<body>
+<h1>FlightOps Academy — progress tracker</h1>
+<div id="summary-row">
+  <div class="stat"><div class="stat-label">Overall progress</div><div class="stat-val" id="pct">0%</div><div class="stat-sub" id="frac">0 of 0 complete</div></div>
+  <div class="stat"><div class="stat-label">Modules complete</div><div class="stat-val" id="mods">0/9</div><div class="stat-sub">all topics covered</div></div>
+  <div class="stat"><div class="stat-label">AVISS00053 units</div><div class="stat-val" id="units">0/8</div><div class="stat-sub">competency units</div></div>
+  <div class="stat"><div class="stat-label">Study tools used</div><div class="stat-val" id="tools">0/4</div><div class="stat-sub">interactive tools</div></div>
+</div>
+<div id="overall-bar"><div id="overall-fill" style="width:0%"></div></div>
+<div id="sections"></div>
+<div id="actions">
+  <button id="btn-reset" onclick="resetAll()">Reset progress</button>
+  <span id="saved-msg">Saved</span>
+</div>
+<p class="credit">FlightOps Academy — progress is saved in your browser</p>
+
+<script>
+const SECTIONS=[
+  {id:'s1',label:'1 — Aviation fundamentals',bg:'#dbeafe',tc:'#1e40af',items:[
+    {id:'i1a',t:'The Australian aviation system',s:'CASA, Airservices, ICAO framework'},
+    {id:'i1b',t:'CASA — Civil Aviation Safety Authority',s:'Civil Aviation Act 1988, regulatory role'},
+    {id:'i1c',t:'Airservices Australia',s:'ATC, AIP, NAIPS, ARFF'},
+    {id:'i1d',t:'ICAO standards',s:'Annex 14, Doc 9981, Chicago Convention'},
+  ]},
+  {id:'s2',label:'2 — Daily operations',bg:'#dcfce7',tc:'#166534',items:[
+    {id:'i2a',t:'Shift overview',s:'Three shift phases, shift log requirements'},
+    {id:'i2b',t:'Morning brief and opening checks',s:'Weather, NOTAM review, movement schedule'},
+    {id:'i2c',t:'RPT and charter operations',s:'ATR 72 turnaround, refuelling, medevac'},
+    {id:'i2d',t:'Closing procedures',s:'Final inspection, documentation, handover'},
+  ]},
+  {id:'s3',label:'3 — Aerodrome Reporting Officer',bg:'#fef3c7',tc:'#92400e',items:[
+    {id:'i3a',t:'Runway inspections',s:'Methodology, elements, documentation',unit:'AVIB0002'},
+    {id:'i3b',t:'Aerodrome markings',s:'Runway and taxiway markings, condition assessment',unit:'AVIB0002'},
+    {id:'i3c',t:'Aerodrome signs',s:'Mandatory instruction vs information signs',unit:'AVIB0002'},
+    {id:'i3d',t:'Lighting systems',s:'Edge lights, PAPI, taxiway, defect criteria',unit:'AVIB0003'},
+    {id:'i3e',t:'FOD management',s:'Zone method, sources, response, prevention',unit:'AVIB0002'},
+    {id:'i3f',t:'Pavement assessment',s:'Crack types, potholes, rubber contamination',unit:'AVIB0002'},
+    {id:'i3g',t:'Airside driving',s:'Permits, vehicle checks, speed limits, runway crossing',unit:'AVIC0001'},
+    {id:'i3h',t:'Situational awareness',s:'Three SA levels, TEM model, FOO scan cycle',unit:'AVIZ0003'},
+    {id:'i3i',t:'Safety Management Systems',s:'Four SMS components, just culture, hazard reporting',unit:'AVIZ0003'},
+  ]},
+  {id:'s4',label:'4 — Works Safety Officer',bg:'#ede9fe',tc:'#4c1d95',items:[
+    {id:'i4a',t:'Airside works planning',s:'Five-step process, worksite establishment, suspension',unit:'AVIF0045'},
+    {id:'i4b',t:'NOTAM creation',s:'NAIPS process, all fields, UTC times',unit:'AVIE0005'},
+    {id:'i4c',t:'Contractor management',s:'Briefing content, permits, non-compliance',unit:'AVIF0045'},
+    {id:'i4d',t:'Risk assessment',s:'Risk matrix, likelihood × consequence',unit:'AVIF0045'},
+    {id:'i4e',t:'OLS calculations and declared distances',s:'Approach surface formula, TORA/TODA/ASDA/LDA',unit:'AVIB0004'},
+  ]},
+  {id:'s5',label:'5 — Radio communications',bg:'#fce7f3',tc:'#831843',items:[
+    {id:'i5a',t:'AROC and licensing',s:'Requirements, who needs one, renewal',unit:'AVIE0003'},
+    {id:'i5b',t:'Standard phraseology',s:'ICAO alphabet, transmission structure, readback',unit:'AVIE0003'},
+    {id:'i5c',t:'Emergency communications',s:'Mayday, Pan-Pan, radio silence, 121.5',unit:'AVIE0003'},
+    {id:'i5d',t:'Sample radio calls',s:'15 worked examples for common YSNF situations',unit:'AVIE0003'},
+  ]},
+  {id:'s6',label:'6 — Emergency management',bg:'#fee2e2',tc:'#7f1d1d',items:[
+    {id:'i6a',t:'Emergency plan overview',s:'AEP structure, roles, notification chain'},
+    {id:'i6b',t:'Aircraft accident',s:'ATSB mandatory reporting, scene preservation'},
+    {id:'i6c',t:'Medical evacuation',s:'After-hours medevac, overnight procedure'},
+    {id:'i6d',t:'Wildlife strike',s:'Reporting, ATSB, dispersal, biological material'},
+  ]},
+  {id:'s7',label:'7 — Norfolk Island (YSNF)',bg:'#d1fae5',tc:'#064e3b',items:[
+    {id:'i7a',t:'Airport layout and characteristics',s:'Runway 11/29, code 4C, elevation, UTC offset'},
+    {id:'i7b',t:'Local procedures',s:'Sea fog, fuel management, backtrack, medevac'},
+    {id:'i7c',t:'Wildlife species guide',s:'Masked Booby, Green Parrot (EPBC Act), seasonal risk'},
+  ]},
+  {id:'s8',label:'8 — Aviation security',bg:'#fce7f3',tc:'#500724',items:[
+    {id:'i8a',t:'ASIC',s:'Colours, display requirements, AusCheck, 2-year validity'},
+    {id:'i8b',t:'Airside access control',s:'Vehicle permits, escorting, security zones'},
+    {id:'i8c',t:'DAMP',s:'CASR Part 99, 0.02% BAC limit, SSAAs, testing types'},
+  ]},
+  {id:'s9',label:'Reference and revision',bg:'#f1f0e8',tc:'#2c2c2a',items:[
+    {id:'i9a',t:'Glossary reviewed',s:'40+ key terms and definitions'},
+    {id:'i9b',t:'CASA references reviewed',s:'Part 139 sections, AC numbers, key links'},
+    {id:'i9c',t:'Scenario exercises completed',s:'18 expandable scenarios with model answers'},
+  ]},
+  {id:'s10',label:'Study tools',bg:'#dbeafe',tc:'#1e3a8a',items:[
+    {id:'i10a',t:'Flashcard deck',s:'169 cards — filter by module, track known vs review'},
+    {id:'i10b',t:'Airport diagram',s:'YSNF clickable map — all 12 zones explored'},
+    {id:'i10c',t:'Scenario simulator',s:'22 scenarios — AI-graded responses'},
+    {id:'i10d',t:'AI study tutor',s:'Ask questions and complete a quiz session'},
+  ]},
+];
+
+let state={};
+
+function load(){try{const s=localStorage.getItem('foa-progress');if(s)state=JSON.parse(s);}catch(e){}}
+function save(){
+  try{localStorage.setItem('foa-progress',JSON.stringify(state));}catch(e){}
+  const m=document.getElementById('saved-msg');
+  m.style.display='inline';
+  setTimeout(()=>m.style.display='none',1500);
+}
+function toggle(id){state[id]=!state[id];save();render();}
+function resetAll(){if(!confirm('Reset all progress? This cannot be undone.'))return;state={};save();render();}
+function toggleSection(id){state['_open_'+id]=!state['_open_'+id];save();render();}
+
+function render(){
+  let totalItems=0,checkedItems=0,checkedMods=0,checkedUnits=new Set(),checkedTools=0;
+  const container=document.getElementById('sections');
+  container.innerHTML='';
+
+  SECTIONS.forEach(sec=>{
+    const secChecked=sec.items.filter(it=>state[it.id]).length;
+    const secTotal=sec.items.length;
+    const secPct=secTotal?Math.round(secChecked/secTotal*100):0;
+    totalItems+=secTotal;
+    checkedItems+=secChecked;
+    if(secChecked===secTotal&&secTotal>0)checkedMods++;
+    sec.items.forEach(it=>{if(state[it.id]&&it.unit)checkedUnits.add(it.unit);});
+    if(sec.id==='s10')checkedTools=secChecked;
+
+    const isOpen=state['_open_'+sec.id]!==false;
+    const barColor=secPct===100?'#16a34a':secPct>50?'#378ADD':'#d1d5db';
+
+    const div=document.createElement('div');
+    div.className='section';
+    div.innerHTML=`
+      <div class="section-header" onclick="toggleSection('${sec.id}')">
+        <div class="sec-icon" style="background:${sec.bg};color:${sec.tc}">${secChecked}/${secTotal}</div>
+        <div class="sec-title">${sec.label}</div>
+        <div class="sec-meta">${secPct}%</div>
+        <span class="sec-chevron ${isOpen?'open':''}">▾</span>
+      </div>
+      <div class="sec-bar"><div class="sec-fill" style="width:${secPct}%;background:${barColor}"></div></div>
+      <div class="items ${isOpen?'open':''}">
+        ${sec.items.map(it=>`
+          <div class="item" onclick="toggle('${it.id}')">
+            <div class="cb ${state[it.id]?'checked':''}"></div>
+            <div class="item-body">
+              <div class="item-title">${it.t}</div>
+              <div class="item-sub">${it.s}</div>
+              ${it.unit?`<span class="unit-badge">${it.unit}</span>`:''}
+            </div>
+          </div>`).join('')}
+      </div>`;
+    container.appendChild(div);
+  });
+
+  const totalPct=totalItems?Math.round(checkedItems/totalItems*100):0;
+  document.getElementById('pct').textContent=totalPct+'%';
+  document.getElementById('frac').textContent=checkedItems+' of '+totalItems+' complete';
+  document.getElementById('mods').textContent=checkedMods+'/9';
+  document.getElementById('units').textContent=checkedUnits.size+'/8';
+  document.getElementById('tools').textContent=checkedTools+'/4';
+  document.getElementById('overall-fill').style.width=totalPct+'%';
+}
+
+load();render();
+</script>
+</body>
+</html>
