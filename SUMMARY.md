@@ -67,4 +67,5 @@
 * [Airport diagram — YSNF](https://gregoquinn.github.io/flightops-academy/docs/interactive/airport-diagram.html)
 * [Scenario simulator](https://gregoquinn.github.io/flightops-academy/docs/interactive/scenario-simulator.html)
 * [AI study tutor](https://gregoquinn.github.io/flightops-academy/docs/interactive/study-tutor.html)
+* [Progress tracker](https://gregoquinn.github.io/flightops-academy/docs/interactive/progress-tracker.html)
 * [Revision hub](docs/09-reference/revision.md)
