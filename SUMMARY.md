@@ -26,7 +26,9 @@
 * [Pavement assessment](docs/03-aro/pavement.md)
 * [Airside driving](docs/03-aro/airside-driving.md)
 * [Situational awareness](docs/03-aro/situational-awareness.md)
-* [Safety Management Systems](docs/03-aro/sms.md)
+* [Safety Management System](docs/03-aro/safety-management-system.md)
+* [Wildlife Hazard Management Plan](docs/03-aro/wildlife-hazard-management-plan.md)
+* [Risk Management Plan](docs/03-aro/risk-management-plan.md)
 
 ## 4 — Works Safety Officer
 * [Airside works planning](docs/04-wso/airside-works.md)
@@ -43,6 +45,7 @@
 
 ## 6 — Emergency management
 * [Emergency plan overview](docs/06-emergency/emer-plan.md)
+* [Aerodrome Emergency Plan](docs/06-emergency/aerodrome-emergency-plan.md)
 * [Aircraft accident](docs/06-emergency/aircraft-accident.md)
 * [Medical evacuation](docs/06-emergency/medical-evac.md)
 * [Wildlife strike](docs/06-emergency/wildlife-strike.md)
